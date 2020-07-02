@@ -4,7 +4,7 @@ from django.utils.timezone import now
 from leagues.models import League
 
 
-class UserManager(BaseUserManager):
+class UserModelManager(BaseUserManager):
     """Required Object Manager for UserAccount"""
 
     def create_user(self, email, first_name, last_name, password=None):
@@ -54,7 +54,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     account_type = models.CharField(max_length=10, choices=ACCOUNT_TYPE_CHOICES, default='inactive')
 
-    objects = UserManager()
+    objects = UserModelManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
