@@ -21,15 +21,6 @@ class UserModelManager(BaseUserManager):
         user.save()
         return user
 
-    def get_umpires(self):
-        return self.filter(account_type='umpire')
-    
-    def get_managers(self):
-        return self.filter(account_type='manager')
-
-    def get_inactive(self):
-        return self.filter(account_type='inactive')
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User Model"""

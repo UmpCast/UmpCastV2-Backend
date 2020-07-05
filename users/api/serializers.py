@@ -22,6 +22,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'first_name', 'last_name', 'is_configured',
                   'phone_number', 'phone_notifications', 'profile_picture',
                   'date_joined', 'password')
+        read_only_fields = ('pk',)
         extra_kwargs = {
             'password': {'write_only': True}
         }

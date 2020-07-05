@@ -22,11 +22,9 @@ class IsLeagueMember(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         league_pk = request.query_params.get('league', None)
-        if (league_pk is not None) and (not request.user.leagues.filter(pk=league_pk).exists()):
-            return False
-        if league_pk is None:  # only superuser has all league scope
-            return request.user.is_superuser
-        return True
+        if league_pk is not None and request.user.leagues.filter(pk=league_pk).exists():
+            return True
+        return request.user.is_superuser
 
 
 class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
@@ -43,7 +41,7 @@ class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Ret
     action_permissions = {
         permissions.AllowAny: ['create'],
         IsLeagueMember: ['list'],
-        IsProfileOwner: ['update', 'retrieve']
+        IsProfileOwner: ['update', 'partial_update', 'retrieve']
     }
 
     def get_queryset(self):  # filter queryset based on query-params
