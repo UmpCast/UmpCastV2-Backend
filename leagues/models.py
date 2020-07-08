@@ -1,7 +1,15 @@
 from django.db import models
 from django.utils.timezone import now
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
+
+
+def set_league_expiration_date():
+    return now() + timedelta(days=14)
+
+
+def set_apply_league_expiration_date():
+    return now() + timedelta(days=7)
 
 
 class League(models.Model):
@@ -9,8 +17,9 @@ class League(models.Model):
     description = models.TextField(max_length=1028, null=True, blank=True)
     league_picture = models.ImageField(upload_to='league_pics/%Y/%m/', null=True, blank=True)
     date_joined = models.DateTimeField(default=now)
-    expiration_date = models.DateTimeField(default=now+datetime.timedelta(days=14))
+    expiration_date = models.DateTimeField(default=set_league_expiration_date)
     adv_scheduling_limit = models.IntegerField(default=30)  # how many days in advance games are scheduled
+    public_access = models.BooleanField(default=False)
 
     # team snap fields
     ts_id = models.IntegerField(default=0)
@@ -24,7 +33,7 @@ class League(models.Model):
 class ApplyLeagueCode(models.Model):
     code = models.CharField(max_length=16, unique=True)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
-    expiration_date = models.DateTimeField(default=now+datetime.timedelta(days=7))
+    expiration_date = models.DateTimeField(default=set_apply_league_expiration_date)
 
     def __str__(self):
         return self.code
@@ -47,9 +56,3 @@ class Role(models.Model):
 
     def __str__(self):
         return ' '.join([self.division.title, self.title])
-
-
-
-
-
-

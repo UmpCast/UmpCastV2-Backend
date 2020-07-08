@@ -62,6 +62,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def is_manager(self):
+        return True if self.account_type == 'manager' else False
+
+    def is_umpire(self):
+        return True if self.account_type == 'umpire' else False
+
 
 class UserLeagueStatus(models.Model):
     """Information relevant to a user for a specific league"""
@@ -79,10 +85,6 @@ class UserLeagueStatus(models.Model):
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
-
-    class Meta:
-        verbose_name = 'Status'
-        verbose_name_plural = 'Status'
 
     def accept_user(self):
         self.join_status = 'accepted'
