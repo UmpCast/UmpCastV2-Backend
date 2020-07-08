@@ -1,50 +1,76 @@
-from .serializers import LeaguePrivateSerializer
-from rest_framework import viewsets, mixins, permissions
+from .serializers import (
+    LeaguePrivateSerializer,
+    LeaguePublicSerializer,
+    DivisionSerializer,
+    RoleSerializer,
+    ApplyLeagueCodeSerializer
+)
+
+from .permissions import (
+    IsManager, IsCodeOwner, ListCodePermission,
+    IsRoleOwner, IsDivisionOwner, IsUmpireOwner, IsLeagueOwner
+)
+
+from rest_framework import viewsets, mixins, status
+from rest_framework.response import Response
 from backend.permissions import ActionBasedPermission
 from drf_multiple_serializer import ActionBaseSerializerMixin
+from ..models import League, Division, Role, ApplyLeagueCode
 
 
-class IsManager(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        return True if request.user.is_manager() else False
-
-
-class IsUmpireOwner(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        user_pk = self.request.query_params.get('user', None)
-        if user_pk is None:
-            return True
-        return True if request.user.pk == user_pk else False
-
-
-class IsLeagueOwner(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        league = League.objects.get(pk=view.kwargs['pk'])
-        return True if request.user.is_manager() and request.user.league_set.filter(league=league).exists() else False
-
-
-class LeagueViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                    mixins.UpdateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
-    serializer_classes = {
-        'default': LeaguePrivateSerializer
+class ApplyLeagueCodeViewSet(viewsets.ModelViewSet):
+    queryset = ApplyLeagueCode.objects.all()
+    filter_fields = ('league', )
+    serializer_class = ApplyLeagueCodeSerializer
+    permission_classes = (ActionBasedPermission, )
+    action_permissions = {
+        IsManager: ['create'],  # league validated on serializer level
+        IsCodeOwner: ['retrieve', 'update', 'partial_update', 'destroy'],
+        ListCodePermission: ['list']
     }
 
+    # @action(detail=True, methods=['post'])
+    # def validate_code(self, request):
+    #     code = request.data.get('code', None)
+    #     if code is None:
+    #         return Response({"error": "missing parameeters"}, status=status.HTTP_400_BAD_REQUEST)
+    #     if ApplyLeagueCode.objects.filter(code=code).exists():
+    #         return Response()
+    #     else:
+    #         return Response({"ApplyLeagueCode": ["invalid code"]}, status=status.HTTP_400_BAD_REQUEST)
+        # code_object = ApplyLeagueCode.objects.ge
+
+
+class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
+    permission_classes = (ActionBasedPermission, )
+    action_permissions = {
+        IsManager: ['create'],  # league validated on serializer level
+        IsRoleOwner: ['destroy']
+    }
+
+
+class DivisionViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    queryset = Division.objects.all()
+    serializer_class = DivisionSerializer
+    permission_classes = (ActionBasedPermission, )
+    action_permissions = {
+        IsManager: ['create'],  # league validated on serializer level
+        IsDivisionOwner: ['destroy']
+    }
+
+
+class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
+    queryset = League.objects.all()
+    filter_fields = ('user', )
+    serializer_classes = {
+        'default': LeaguePrivateSerializer,
+        'list': LeaguePublicSerializer
+    }
     permission_classes = (ActionBasedPermission, )
     action_permissions = {
         IsManager: ['create'],
         IsUmpireOwner: ['list'],
-        IsLeagueOwner: ['update', 'partial_update', 'retrieve']
+        IsLeagueOwner: ['update', 'partial_update', 'retrieve', 'destroy']
     }
-
-    def get_queryset(self):  # filter queryset based on query-params
-        queryset = League.objects.all()
-        user_pk = self.request.query_params.get('user', None)
-        if user_pk is not None:
-            queryset = queryset.filter(user__pk=user_pk)
-        return queryset
