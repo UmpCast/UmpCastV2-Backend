@@ -1,20 +1,22 @@
 from rest_framework import serializers
-from ..models import User
+from ..models import User, UserLeagueStatus
 from rest_framework.serializers import ValidationError
+from leagues.api.serializers import LeaguePublicSerializer
 import django.contrib.auth.password_validation as validators
+from leagues.models import League
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class UserListSerializer(serializers.ModelSerializer):
+class UserProfilePublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
         read_only_fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfilePrivateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -22,6 +24,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'first_name', 'last_name', 'is_configured',
                   'phone_number', 'phone_notifications', 'profile_picture',
                   'date_joined', 'password')
+        read_only_fields = ('pk',)
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -44,3 +47,24 @@ class UserProfileSerializer(serializers.ModelSerializer):
             instance.set_password(validated_data.pop('password'))
         instance.save()
         return super().update(instance, validated_data)
+
+
+class UserLeagueStatusCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserLeagueStatus
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
+        read_only_fields = ('pk', 'date_pending')
+
+    def validate_user(self, user):
+        if user != self.context['request'].user:
+            raise ValidationError("Can only create UserLeagueStatus using current user")
+        return user
+
+class UserLeagueStatusUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserLeagueStatus
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
+        read_only_fields = ('pk', 'user', 'league', 'date_pending')
+        
