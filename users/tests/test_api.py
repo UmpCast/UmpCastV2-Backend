@@ -1,4 +1,4 @@
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 from model_bakery import baker
@@ -19,7 +19,8 @@ class TestUserAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin, mixins.TestU
         'email' : 'valid@email.com',
         'first_name' : 'validfirstname',
         'last_name' : 'validlastname',
-        'password' : 'avalidpassword'
+        'password' : 'avalidpassword',
+        'password2' : 'avalidpassword'
     }
     valid_update = {
         'email': 'replacement@email.com'
