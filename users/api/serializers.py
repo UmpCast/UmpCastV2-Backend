@@ -17,16 +17,17 @@ class UserProfilePublicSerializer(serializers.ModelSerializer):
 
 
 class UserProfilePrivateSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(max_length=128, write_only=True)
 
     class Meta:
         model = User
         fields = ('pk', 'account_type', 'leagues', 'email', 'email_notifications',
                   'first_name', 'last_name', 'is_configured',
                   'phone_number', 'phone_notifications', 'profile_picture',
-                  'date_joined', 'password')
+                  'date_joined', 'password', 'password2')
         read_only_fields = ('pk',)
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True},
         }
 
     def validate_password(self, password):
@@ -34,6 +35,8 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         return password
 
     def create(self, validated_data):
+        print(validated_data)
+
         first = validated_data.pop('first_name', None)
         last = validated_data.pop('last_name', None)
         email = validated_data.pop('email', None)
