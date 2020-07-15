@@ -38,8 +38,11 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         last = validated_data.pop('last_name', None)
         email = validated_data.pop('email', None)
         password = validated_data.pop('password', None)
-        if not (first and last and email and password):
+        password2 = validated_data.pop('password2', None)
+        if not (first and last and email and password and password2):
             raise ValidationError("missing parameters")
+        if password != password2:
+            raise ValidationError("passwords don't match")
         return User.objects.create_user(email, first, last, password)
 
     def update(self, instance, validated_data):
@@ -61,10 +64,10 @@ class UserLeagueStatusCreateSerializer(serializers.ModelSerializer):
             raise ValidationError("Can only create UserLeagueStatus using current user")
         return user
 
+
 class UserLeagueStatusUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserLeagueStatus
         fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
         read_only_fields = ('pk', 'user', 'league', 'date_pending')
-        
