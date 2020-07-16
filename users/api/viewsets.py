@@ -1,56 +1,65 @@
-from ..models import User
-from .serializers import UserSerializer
-from rest_framework import viewsets, mixins
-from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-# from rest_framework.decorators import action
-# from rest_framework import renderers
+from ..models import User, UserLeagueStatus
+from .serializers import (
+    UserProfilePublicSerializer,
+    UserProfilePrivateSerializer,
+    UserLeagueStatusCreateSerializer,
+    UserLeagueStatusUpdateSerializer
+)
+from .permissions import (
+    IsLeagueMember, IsUserOwner,
+    IsUserLeagueStatusOwner
+)
+from rest_framework import viewsets, mixins, permissions
+from drf_multiple_serializer import ActionBaseSerializerMixin
+from backend.permissions import (
+    ActionBasedPermission,
+    IsSuperUser
+)
 
 
-class UserViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+
+class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    Views for Creating Users, Retrieving Users, and Updating Users
+    """
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    filter_fields = ('leagues', 'account_type')
 
-    # @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
-    # def test_view_set(self):
-    #     return Response({'deez': 'nuts'})
+    serializer_classes = {
+        'default': UserProfilePrivateSerializer,
+        'list': UserProfilePublicSerializer
+    }
 
-# class UserViewSet(viewsets.ViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#
-# # @action
-#     def deeznuts(self):
-#         return Response({'deez':'nuts'})
-#
-#     def create(self, request):
-#         data = request.data
-#         serializer = UserSerializer(data=data)
-#         if not serializer.is_valid():
-#             return Response({'error': 'invalid data format'})
-#         serializer.save()
-#         response = serializer.data
-#         response['success'] = 'user created successfully'
-#         return Response(response)
-#         # response = serializer.data
-#         # if serializer.is_valid():
-#         #     serializer.save()
-#         #     response['success'] = 'User created successfully'
-#         # else:
-#         #     response['failied'] = 'User not created successfully'
-#         # return Response(response)
-#
-#     def retrieve(self, request, pk=None):
-#         queryset = User.objects.all()
-#         user = get_object_or_404(queryset, pk=pk)
-#         serializer = UserSerializer(user)
-#         return Response(serializer.data)
-#
-#     def update(self, request, pk=None):
-#         return Response({'type':'update'})
-#
-#     # permission_classes = (ActionBasedPermission,)
-#     # action_permissions = {
-#     #     IsAuthenticated: ['update', 'partial_update', 'destroy', 'list', 'create'],
-#     #     AllowAny: ['retrieve']
-#     # }
+    permission_classes = (IsSuperUser | ActionBasedPermission,)
+    action_permissions = {
+        permissions.AllowAny: ['create'],
+        IsLeagueMember: ['list'],
+        IsUserOwner: ['update', 'partial_update', 'retrieve'],
+    }
+
+    def get_object(self):  # custom get object for /me endpoint
+        pk = self.kwargs.get('pk', None)
+        if pk == 'me':
+            return self.request.user
+        return super().get_object()
+
+
+class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
+    """
+    Views for CRUD, Listing, Filtering UserLeagueStatus
+    """
+    queryset = UserLeagueStatus.objects.all()
+    filter_fields = ('user',)
+
+    serializer_classes = {
+        'default': UserLeagueStatusCreateSerializer,
+        'update': UserLeagueStatusUpdateSerializer,
+        'partial_update': UserLeagueStatusUpdateSerializer
+    }
+
+    permission_classes = (IsSuperUser | ActionBasedPermission,)
+    action_permissions = {
+        permissions.IsAuthenticated: ['create', 'list'],  # user restriction enforced on serializer level
+        IsUserLeagueStatusOwner: ['retrieve', 'update', 'partial_update', 'destroy'],
+    }

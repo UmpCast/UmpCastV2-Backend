@@ -1,39 +1,76 @@
 from rest_framework import serializers
-from ..models import User
+from ..models import User, UserLeagueStatus
 from rest_framework.serializers import ValidationError
+from leagues.api.serializers import LeaguePublicSerializer
+import django.contrib.auth.password_validation as validators
+from leagues.models import League
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserProfilePublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
+        read_only_fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
+
+
+class UserProfilePrivateSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(max_length=128, write_only=True)
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email')
+        fields = ('pk', 'account_type', 'leagues', 'email', 'email_notifications',
+                  'first_name', 'last_name', 'is_configured',
+                  'phone_number', 'phone_notifications', 'profile_picture',
+                  'date_joined', 'password', 'password2')
+        read_only_fields = ('pk',)
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
+
+    def validate_password(self, password):
+        validators.validate_password(password=password)
+        return password
 
     def create(self, validated_data):
-        # add validation
-        first_name = validated_data.get('first_name')
-        last_name = validated_data.get('last_name')
-        email = validated_data.get('email')
-        password = validated_data.get('password')
-        return User.objects.create_user(email, first_name, last_name, password)
+        print(validated_data)
 
-        # data = self.request.data
-        # first_name = data['first_name']
-        # last_name = data['last_name']
-        # email = data['email']
-        # password = data['password']
-        # password2 = data['password2']
-        #
-        # if password != password2:
-        #     return Response({'error': 'Passwords do not match!'})
-        #
-        # if User.objects.filter(email=email).exists():
-        #     return Response({'error': 'Email already exists!'})
-        # else:
-        #     User.objects.create_user(email, first_name, last_name, password)
-        #     return Response({'success': 'User created successfully'})
-
-        pass
+        first = validated_data.pop('first_name', None)
+        last = validated_data.pop('last_name', None)
+        email = validated_data.pop('email', None)
+        password = validated_data.pop('password', None)
+        password2 = validated_data.pop('password2', None)
+        if not (first and last and email and password and password2):
+            raise ValidationError("missing parameters")
+        if password != password2:
+            raise ValidationError("passwords don't match")
+        return User.objects.create_user(email, first, last, password)
 
     def update(self, instance, validated_data):
-        pass
+        if 'password' in validated_data:
+            instance.set_password(validated_data.pop('password'))
+        instance.save()
+        return super().update(instance, validated_data)
+
+
+class UserLeagueStatusCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserLeagueStatus
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
+        read_only_fields = ('pk', 'date_pending')
+
+    def validate_user(self, user):
+        if user != self.context['request'].user:
+            raise ValidationError("Can only create UserLeagueStatus using current user")
+        return user
+
+
+class UserLeagueStatusUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserLeagueStatus
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
+        read_only_fields = ('pk', 'user', 'league', 'date_pending')
