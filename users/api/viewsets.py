@@ -31,6 +31,7 @@ class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Ret
         'list': UserProfilePublicSerializer
     }
 
+
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
         permissions.AllowAny: ['create'],

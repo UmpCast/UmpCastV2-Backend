@@ -98,5 +98,3 @@ class UserLeagueStatus(models.Model):
     def set_max_casts(self, max_casts):
         self.max_casts = max_casts
         self.save()
-
-
