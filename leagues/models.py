@@ -20,6 +20,7 @@ class League(models.Model):
     expiration_date = models.DateTimeField(default=set_league_expiration_date)
     adv_scheduling_limit = models.IntegerField(default=30)  # how many days in advance games are scheduled
     public_access = models.BooleanField(default=False)
+    can_apply = models.BooleanField(default=True)
 
     # team snap fields
     ts_id = models.IntegerField(default=0)
@@ -28,15 +29,6 @@ class League(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class ApplyLeagueCode(models.Model):
-    code = models.CharField(max_length=16, unique=True)
-    league = models.ForeignKey(League, on_delete=models.CASCADE)
-    expiration_date = models.DateTimeField(default=set_apply_league_expiration_date)
-
-    def __str__(self):
-        return self.code
 
 
 class Division(models.Model):

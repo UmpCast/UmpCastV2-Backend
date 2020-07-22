@@ -7,8 +7,8 @@ from ..models import User
 
 
 class TestUserAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin, mixins.TestUpdateMixin,
-                    mixins.TestListMixin, mixins.TestFilterMixin, mixins.TestSetupMixin,
-                    APITestCase):
+                  mixins.TestListMixin, mixins.TestFilterMixin, mixins.TestSetupMixin,
+                  APITestCase):
     """
     User Model tests for CRUD, List, List-Filter, and Email Validation
     """
@@ -16,11 +16,11 @@ class TestUserAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin, mixins.TestU
     basename = 'user'
     filter_fields = ['leagues', 'account_type']
     valid_create = {
-        'email' : 'valid@email.com',
-        'first_name' : 'validfirstname',
-        'last_name' : 'validlastname',
-        'password' : 'avalidpassword',
-        'password2' : 'avalidpassword'
+        'email': 'valid@email.com',
+        'first_name': 'validfirstname',
+        'last_name': 'validlastname',
+        'password': 'avalidpassword',
+        'password2': 'avalidpassword'
     }
     valid_update = {
         'email': 'replacement@email.com'
@@ -40,7 +40,7 @@ class TestUserAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin, mixins.TestU
     def test_user_validate_unique(self):
         user = baker.make('users.User', email='duplicate@email.com')
         data = {
-            'email' : 'duplicate@email.com'
+            'email': 'duplicate@email.com'
         }
 
         create_url = reverse('user-list')
@@ -50,7 +50,7 @@ class TestUserAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin, mixins.TestU
 
     def test_user_validate_email(self):
         data = {
-            'email' : 'bad_email'
+            'email': 'bad_email'
         }
 
         create_url = reverse('user-list')

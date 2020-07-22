@@ -1,21 +1,7 @@
 from rest_framework import serializers
-from ..models import League, Division, Role, ApplyLeagueCode
+from ..models import League, Division, Role
+from rest_framework.serializers import ValidationError
 
-
-class ApplyLeagueCodeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ApplyLeagueCode
-        fields = ('pk', 'league', 'expiration_date')
-        read_only_fields = ('pk', 'league')
-
-    def validate_league(self, league):
-        if self.context['request'].method != 'POST':
-            return league
-        if League.objects.get(pk=league) in self.context['request'].user.leagues.all():
-            return league
-        else:
-            raise ValidationError("Can only create code for a league you own")
 
 class RoleSerializer(serializers.ModelSerializer):
 
@@ -65,4 +51,4 @@ class LeaguePublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = League
         fields = ('pk', 'title', 'description', 'league_picture')
-        read_only_fields = ('pk',)
+        read_only_fields = ('pk', 'title', 'description', 'league_picture')
