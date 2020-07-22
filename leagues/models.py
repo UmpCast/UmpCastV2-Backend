@@ -13,7 +13,7 @@ def set_apply_league_expiration_date():
 
 
 class League(models.Model):
-    title = models.CharField(max_length=64)
+    title = models.CharField(max_length=32)
     description = models.TextField(max_length=1028, null=True, blank=True)
     league_picture = models.ImageField(upload_to='league_pics/%Y/%m/', null=True, blank=True)
     date_joined = models.DateTimeField(default=now)
@@ -40,7 +40,7 @@ class ApplyLeagueCode(models.Model):
 
 
 class Division(models.Model):
-    title = models.CharField(max_length=64)
+    title = models.CharField(max_length=32)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
 
     # team snap fields
@@ -51,7 +51,7 @@ class Division(models.Model):
 
 
 class Role(models.Model):
-    title = models.CharField(max_length=64)
+    title = models.CharField(max_length=32)
     division = models.ForeignKey(Division, on_delete=models.CASCADE)
 
     def __str__(self):
