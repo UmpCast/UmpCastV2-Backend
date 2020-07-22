@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ..models import League, Division, Role
 from rest_framework.serializers import ValidationError
+from backend import mixins
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -8,12 +9,13 @@ class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = ('pk', 'title', 'division')
-        read_only_fields = ('pk', 'division')
+        read_only_fields = ('pk',)
+        # create_only_fields = ('division',)
 
     def validate_division(self, division):
         if self.context['request'].method != 'POST':
             return division
-        if Division.objects.get(pk=division).league in self.context['request'].user.leagues.all():
+        if division.league in self.context['request'].user.leagues.all():
             return division
         else:
             raise ValidationError("Can only create role for a league you own")
@@ -25,12 +27,13 @@ class DivisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Division
         fields = ('pk', 'title', 'league', 'ts_id', 'roles')
-        read_only_fields = ('pk', 'league')
+        read_only_fields = ('pk',)
+        # create_only_fields = ('league', )
 
     def validate_league(self, league):
         if self.context['request'].method != 'POST':
             return league
-        if League.objects.get(pk=league) in self.context['request'].user.leagues.all():
+        if league in self.context['request'].user.leagues.all():
             return league
         else:
             raise ValidationError("Can only create divison for a league you own")
