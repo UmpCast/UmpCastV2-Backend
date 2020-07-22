@@ -48,6 +48,14 @@ class LeaguePrivateSerializer(serializers.ModelSerializer):
                   'date_joined', 'expiration_date', 'adv_scheduling_limit', 'ts_id', 'opponent_library', 'can_apply')
         read_only_fields = ('pk', 'date_joined')
 
+    def create(self, validated_data):
+        assert self.context['request'].user.is_manager(), (
+            'this line should not be reachable. request user must be manager to create league'
+        )
+        league = super().create(validated_data)
+        self.context['request'].user.leagues.add(league)
+        return league
+
 
 class LeaguePublicSerializer(serializers.ModelSerializer):
 

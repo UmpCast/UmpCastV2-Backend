@@ -23,6 +23,10 @@ class TestLeagueAPI(mixins.TestModelMixin, APITestCase):
         'title': 'foo league',
     }
 
+    def setUp(self):
+        super().setUp()
+        self.user.account_type = 'manager'
+
     def create_object(self):
         return baker.make('leagues.League')
 
@@ -57,7 +61,7 @@ class TestRoleAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
     """
     Role Model Tests for Create, Destroy
     """
-    
+
     basename = 'role'
 
     def create_object(self):
