@@ -65,23 +65,20 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         instance.save()
         return super().update(instance, validated_data)
 
-
-class UserLeagueStatusCreateSerializer(serializers.ModelSerializer):
+class UserLeagueStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserLeagueStatus
         fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
         read_only_fields = ('pk', 'date_pending')
+        create_only_fields = ('user', 'league')
+
+    def update(self, instance, validated_data):  # remove create_only_fields from dictionary
+        for field in UserLeagueStatusSerializer.Meta.create_only_fields:
+            validated_data.pop(field, None)
+        return super().update(instance, validated_data)
 
     def validate_user(self, user):
         if user != self.context['request'].user:
             raise ValidationError("Can only create UserLeagueStatus using current user")
         return user
-
-
-class UserLeagueStatusUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = UserLeagueStatus
-        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
-        read_only_fields = ('pk', 'user', 'league', 'date_pending')

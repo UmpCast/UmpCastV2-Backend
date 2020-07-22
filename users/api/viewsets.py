@@ -2,8 +2,7 @@ from ..models import User, UserLeagueStatus
 from .serializers import (
     UserProfilePublicSerializer,
     UserProfilePrivateSerializer,
-    UserLeagueStatusCreateSerializer,
-    UserLeagueStatusUpdateSerializer
+    UserLeagueStatusSerializer
 )
 from .permissions import (
     IsLeagueMember, IsUserOwner,
@@ -15,7 +14,6 @@ from backend.permissions import (
     ActionBasedPermission,
     IsSuperUser
 )
-
 
 
 class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
@@ -30,7 +28,6 @@ class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Ret
         'default': UserProfilePrivateSerializer,
         'list': UserProfilePublicSerializer
     }
-
 
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
@@ -52,13 +49,7 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     """
     queryset = UserLeagueStatus.objects.all()
     filter_fields = ('user',)
-
-    serializer_classes = {
-        'default': UserLeagueStatusCreateSerializer,
-        'update': UserLeagueStatusUpdateSerializer,
-        'partial_update': UserLeagueStatusUpdateSerializer
-    }
-
+    serializer_class = UserLeagueStatusSerializer
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
         permissions.IsAuthenticated: ['create', 'list'],  # user restriction enforced on serializer level
