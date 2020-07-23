@@ -29,10 +29,10 @@ class IsUmpireOwner(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        user_pk = self.request.query_params.get('user', None)
+        user_pk = request.query_params.get('user', None)
         if user_pk is None:
             return True
-        return request.user.pk == user_pk
+        return request.user.pk == int(user_pk)
 
 
 class IsLeagueOwner(permissions.BasePermission):

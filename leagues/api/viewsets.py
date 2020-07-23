@@ -24,6 +24,18 @@ from django.shortcuts import get_object_or_404
 
 
 class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    Provide Create/Destroy functionality for Roles
+
+    create: Create Role \n
+    * Permissions: IsManager
+    * Extra Validations:
+        * Must be owner of league the role is linked to
+
+    destroy: Destroy Division \n
+    * Permissions: IsRoleOwner
+    """
+
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = (IsSuperUser | ActionBasedPermission, )
@@ -34,6 +46,18 @@ class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.Ge
 
 
 class DivisionViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    Provide Create/Destroy functionality for Divisions
+
+    create: Create Division \n
+    * Permissions: IsManager
+    * Extra Validations:
+        * Must be owner of league the division is linked to
+
+    destroy: Destroy Division \n
+    * Permissions: IsDivisionOwner
+    """
+
     queryset = Division.objects.all()
     serializer_class = DivisionSerializer
     permission_classes = (IsSuperUser | ActionBasedPermission, )
@@ -44,6 +68,31 @@ class DivisionViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewset
 
 
 class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
+    """
+    Provide CRUD, List, List-Filter functionality for League
+
+    create: Create League \n
+    * Permissions: IsManager
+    * Extra Notes:
+        * Manager automatically added to created league
+
+    retrieve: Retrieve League \n
+    * Permissions: IsLeagueOwner
+
+    update: Full Update League \n
+    * Permissions: IsLeagueOwner
+
+    partial_update: Partial Update League \n
+    * Permissions: IsLeagueOwner
+
+    destroy: Destroy League \n
+    * Permissions: IsLeagueOwner
+
+    list: List League \n
+    * Permissions: IsUmpireOwner (if using user query param)
+    * Query Params: User
+    """
+
     queryset = League.objects.all()
     filter_fields = ('user', )
     serializer_classes = {

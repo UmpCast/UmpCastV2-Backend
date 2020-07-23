@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework_social_oauth2',
     'django_filters',
     'corsheaders',
+    'drf_yasg',
 
     # amazon aws s3
     'storages',
