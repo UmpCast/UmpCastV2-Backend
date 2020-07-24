@@ -8,12 +8,15 @@ from .permissions import (
     IsLeagueMember, IsUserOwner,
     IsUserLeagueStatusOwner
 )
-from rest_framework import viewsets, mixins, permissions
+from rest_framework import viewsets, mixins, permissions, status
 from drf_multiple_serializer import ActionBaseSerializerMixin
 from backend.permissions import (
     ActionBasedPermission,
     IsSuperUser
 )
+from rest_framework.decorators import action
+from leagues.models import Level
+from rest_framework.response import Response
 
 
 class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
@@ -66,7 +69,7 @@ class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Ret
             return self.request.user
         return super().get_object()
 
-# TODO: List needs updating
+
 class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     """
     Provide CRUD, List, List-Filter functionality for UserLeagueStatus
@@ -89,15 +92,35 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     * Permissions: IsUserLeagueStatusOwner
 
     list: List UserLeagueStatus \n
-    * THIS IS STILL IN PROGRESS!
-    * Permissions: IsAuthenticated
-    * Query Params: User
+    * Permissions: IsAuthenticated (only user pk is provided, no private info)
+    * Query Params: User, League
+
+    apply_level: Apply a Level to UserLeagueStatus \n
+    * Permissions: Owner of Applied Level
+    * Extra Notes:
+        * Ignore below. The only required post field is "level", the pk of the level object
     """
     queryset = UserLeagueStatus.objects.all()
-    filter_fields = ('user',)
+    filter_fields = ('user', 'league')
     serializer_class = UserLeagueStatusSerializer
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
-        permissions.IsAuthenticated: ['create', 'list'],  # user restriction enforced on serializer level
+        permissions.IsAuthenticated: ['create', 'list', 'apply_level'],  # user restriction enforced on serializer level
         IsUserLeagueStatusOwner: ['retrieve', 'update', 'partial_update', 'destroy'],
     }
+
+    @action(detail=True, methods=['post'])
+    def apply_level(self, request, pk):
+        uls = self.get_object()
+        uls.visibilities.clear()
+        level_pk = request.data.get('level', None)
+        if level_pk is None:
+            return Response({"error": "missing parameters"}, status=status.HTTP_400_BAD_REQUEST)
+        if not Level.objects.filter(pk=level_pk).exists():
+            return Response({"level": ["invalid level pk"]}, status=status.HTTP_400_BAD_REQUEST)
+        level_obj = Level.objects.get(pk=level_pk)
+        if level_obj.league not in request.user.leagues.all():
+            return Response({"level": ["you are not the owner of this level"]}, status=status.HTTP_400_BAD_REQUEST)
+        for role in level_obj.roles.all():
+            uls.visibilities.add(role)
+        return Response(status=status.HTTP_200_OK)

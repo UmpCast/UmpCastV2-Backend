@@ -1,5 +1,5 @@
 from users.api.viewsets import UserViewSet, UserLeagueStatusViewSet
-from leagues.api.viewsets import LeagueViewSet, RoleViewSet, DivisionViewSet
+from leagues.api.viewsets import LeagueViewSet, RoleViewSet, DivisionViewSet, LevelViewSet
 from rest_framework import routers
 
 router = routers.DefaultRouter()
@@ -8,6 +8,7 @@ router.register('user-league-status', UserLeagueStatusViewSet, basename='user-le
 router.register('leagues', LeagueViewSet, basename='league')
 router.register('divisions', DivisionViewSet, basename='division')
 router.register('roles', RoleViewSet, basename='role')
+router.register('levels', LevelViewSet, basename='level')
 
 
 for url in router.urls:

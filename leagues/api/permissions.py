@@ -1,5 +1,27 @@
 from rest_framework import permissions
-from ..models import League, Division, Role
+from ..models import League, Division, Role, Level
+
+
+class IsLevelOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        level = Level.objects.get(pk=view.kwargs['pk'])
+        return request.user.is_manager() and level.league in request.user.leagues.all()
+
+
+class LevelListQueryRequired(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        league_pk = request.query_params.get('league', None)
+        if league_pk is None:
+            return False
+        if League.objects.filter(pk=league_pk).exists():
+            league = League.objects.get(pk=league_pk)
+            return league in request.user.leagues.all()
+        else:
+            return False
 
 
 class IsManager(permissions.BasePermission):

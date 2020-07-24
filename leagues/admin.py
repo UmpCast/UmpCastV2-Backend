@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import League, Division, Role
+from .models import League, Division, Role, Level
+from ordered_model.admin import OrderedModelAdmin
 
 
 class LeagueAdmin(admin.ModelAdmin):
@@ -23,6 +24,11 @@ class RoleAdmin(admin.ModelAdmin):
     list_per_page = 25
 
 
+class LevelAdmin(OrderedModelAdmin):
+    list_display = ('pk', 'title', 'league', 'order', 'move_up_down_links')
+
+
 admin.site.register(League, LeagueAdmin)
 admin.site.register(Division, DivisionAdmin)
 admin.site.register(Role, RoleAdmin)
+admin.site.register(Level, LevelAdmin)

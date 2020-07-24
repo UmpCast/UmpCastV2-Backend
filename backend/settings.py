@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'drf_yasg',
+    'ordered_model',
 
     # amazon aws s3
     'storages',

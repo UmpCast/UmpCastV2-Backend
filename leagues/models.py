@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.timezone import now
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
+from ordered_model.models import OrderedModel
 
 
 def set_league_expiration_date():
@@ -48,3 +49,10 @@ class Role(models.Model):
 
     def __str__(self):
         return ' '.join([self.division.title, self.title])
+
+
+class Level(OrderedModel):
+    title = models.CharField(max_length=32, null=True, blank=True)
+    league = models.ForeignKey(League, on_delete=models.CASCADE)
+    roles = models.ManyToManyField(Role)
+    order_with_respect_to = 'league'

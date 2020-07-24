@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import League, Division, Role
+from ..models import League, Division, Role, Level
 from rest_framework.serializers import ValidationError
 from backend import mixins
 
@@ -19,6 +19,29 @@ class RoleSerializer(serializers.ModelSerializer):
             return division
         else:
             raise ValidationError("Can only create role for a league you own")
+
+
+class LevelSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Level
+        fields = ('pk', 'title', 'league', 'roles', 'order')
+        read_only_fields = ('pk', )
+        # create_only_fields = ('title', 'league', 'roles')
+
+    def validate_league(self, league):
+        if self.context['request'].method != 'POST':
+            return league
+        if league in self.context['request'].user.leagues.all():
+            return league
+        else:
+            raise ValidationError("Can only create role for a league you own")
+
+    def validate(self, data):
+        for role in data['roles']:
+            if role.division.league != data['league']:
+                raise ValidationError('roles for level must be from league')
+        return super().validate(data)
 
 
 class DivisionSerializer(serializers.ModelSerializer):
@@ -41,10 +64,11 @@ class DivisionSerializer(serializers.ModelSerializer):
 
 class LeaguePrivateSerializer(serializers.ModelSerializer):
     divisions = DivisionSerializer(source='division_set', many=True, read_only=True)
+    levels = DivisionSerializer(source='level_set', many=True, read_only=True)
 
     class Meta:
         model = League
-        fields = ('pk', 'title', 'description', 'divisions', 'league_picture', 'public_access',
+        fields = ('pk', 'title', 'description', 'divisions', 'levels', 'league_picture', 'public_access',
                   'date_joined', 'expiration_date', 'adv_scheduling_limit', 'ts_id', 'opponent_library', 'can_apply')
         read_only_fields = ('pk', 'date_joined')
 

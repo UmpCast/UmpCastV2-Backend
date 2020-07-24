@@ -55,6 +55,38 @@ class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
             'league': league.pk
         }
 
+class TestLevelAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
+                    mixins.TestFilterMixin, mixins.TestSetupMixin, APITestCase):
+    """
+    Level Model Tests for Create, Destroy, Filter, Move
+    """
+
+    basename = 'level'
+    filter_fields = ['league']
+
+    def create_object(self):
+        return baker.make('leagues.Level')
+
+    def get_valid_create(self):
+        role = baker.make('leagues.Role')
+        self.user.leagues.add(role.division.league)
+        return {
+            'league': role.division.league.pk,
+            'roles': [role.pk]
+        }
+
+    def get_filter_queries(self):
+        return {
+            'league': [str(league.pk) for league in League.objects.all()]
+        }
+
+    def test_move_level(self):
+        level_1 = baker.make('leagues.Level', order=0)
+        level_2 = baker.make('leagues.Level', league=level_1.league, order=1)
+        move_level = reverse('level-move-level', kwargs={'pk': level_1.pk})
+        response = self.client.patch(move_level, data = {"order": 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TestRoleAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
                     mixins.TestSetupMixin, APITestCase):

@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.timezone import now
-from leagues.models import League
+from leagues.models import League, Role
 
 
 class UserModelManager(BaseUserManager):
@@ -85,6 +85,7 @@ class UserLeagueStatus(models.Model):
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
+    visibilities = models.ManyToManyField(Role)
 
     def accept_user(self):
         self.join_status = 'accepted'
