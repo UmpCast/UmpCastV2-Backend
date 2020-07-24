@@ -4,6 +4,7 @@ from rest_framework.serializers import ValidationError
 from leagues.api.serializers import LeaguePublicSerializer
 import django.contrib.auth.password_validation as validators
 from leagues.models import League
+import re
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -34,9 +35,20 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         validators.validate_password(password=password)
         return password
 
-    def create(self, validated_data):
-        print(validated_data)
+    def validate_password2(self, password2):
+        if self.initial_data.get('password', None) != password2:
+            raise ValidationError('passwords must be equal')
+        return password2
 
+    def validate_phone_number(self, phone_number):
+        if len(phone_number) != 10:
+            raise ValidationError('invalid phone_number length')
+        pattern = re.compile("^([0-9]+)+$")
+        if not pattern.match(phone_number):
+            raise ValidationError('phone numbers can only contain numeric values')
+        return phone_number
+
+    def create(self, validated_data):
         first = validated_data.pop('first_name', None)
         last = validated_data.pop('last_name', None)
         email = validated_data.pop('email', None)
@@ -44,9 +56,8 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         password2 = validated_data.pop('password2', None)
         if not (first and last and email and password and password2):
             raise ValidationError("missing parameters")
-        if password != password2:
-            raise ValidationError("passwords don't match")
-        return User.objects.create_user(email, first, last, password)
+        user = User.objects.create_user(email, first, last, password)
+        return self.update(user, validated_data)
 
     def update(self, instance, validated_data):
         if 'password' in validated_data:
@@ -54,23 +65,20 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         instance.save()
         return super().update(instance, validated_data)
 
-
-class UserLeagueStatusCreateSerializer(serializers.ModelSerializer):
+class UserLeagueStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserLeagueStatus
         fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
         read_only_fields = ('pk', 'date_pending')
+        create_only_fields = ('user', 'league')
+
+    def update(self, instance, validated_data):  # remove create_only_fields from dictionary
+        for field in UserLeagueStatusSerializer.Meta.create_only_fields:
+            validated_data.pop(field, None)
+        return super().update(instance, validated_data)
 
     def validate_user(self, user):
         if user != self.context['request'].user:
             raise ValidationError("Can only create UserLeagueStatus using current user")
         return user
-
-
-class UserLeagueStatusUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = UserLeagueStatus
-        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
-        read_only_fields = ('pk', 'user', 'league', 'date_pending')

@@ -1,23 +1,28 @@
 from rest_framework import permissions
-from ..models import League, Division, Role, ApplyLeagueCode
+from ..models import League, Division, Role, Level
 
 
-class IsCodeOwner(permissions.BasePermission):
+class IsLevelOwner(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        code = ApplyLeagueCode.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and code.league in request.user.leagues.all()
+        level = Level.objects.get(pk=view.kwargs['pk'])
+        return request.user.is_manager() and level.league in request.user.leagues.all()
 
 
-class ListCodePermission(permissions.BasePermission):
+class LevelListQueryRequired(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        league_pk = self.request.query_params.get('league', None)
+        league_pk = request.query_params.get('league', None)
         if league_pk is None:
-            return request.user.is_superuser
-        return request.user.is_manager() and League.objects.get(pk=league_pk) in request.user.leagues.all()
+            return False
+        if League.objects.filter(pk=league_pk).exists():
+            league = League.objects.get(pk=league_pk)
+            return league in request.user.leagues.all()
+        else:
+            return False
+
 
 class IsManager(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -46,10 +51,10 @@ class IsUmpireOwner(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        user_pk = self.request.query_params.get('user', None)
+        user_pk = request.query_params.get('user', None)
         if user_pk is None:
             return True
-        return request.user.pk == user_pk
+        return request.user.pk == int(user_pk)
 
 
 class IsLeagueOwner(permissions.BasePermission):

@@ -6,6 +6,7 @@ class IsUserOwner(permissions.BasePermission):
     """
     Check if request user owns profile or is viewing personal profile
     """
+
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
@@ -19,6 +20,7 @@ class IsLeagueMember(permissions.BasePermission):
     """
     Check if request user has valid user-list query scope
     """
+
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
@@ -32,6 +34,7 @@ class IsUserLeagueStatusOwner(permissions.BasePermission):
     """
     Check if request user is the owner of the UserLeagueStatus
     """
+
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False

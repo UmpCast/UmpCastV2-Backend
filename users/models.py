@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.timezone import now
-from leagues.models import League
+from leagues.models import League, Role
 
 
 class UserModelManager(BaseUserManager):
@@ -25,10 +25,10 @@ class UserModelManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User Model"""
     leagues = models.ManyToManyField(League, blank=True)
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(max_length=64, unique=True)
     email_notifications = models.BooleanField(default=True)
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=32)
+    last_name = models.CharField(max_length=32)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_configured = models.BooleanField(default=False)
@@ -85,6 +85,7 @@ class UserLeagueStatus(models.Model):
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
+    visibilities = models.ManyToManyField(Role)
 
     def accept_user(self):
         self.join_status = 'accepted'
@@ -98,5 +99,3 @@ class UserLeagueStatus(models.Model):
     def set_max_casts(self, max_casts):
         self.max_casts = max_casts
         self.save()
-
-

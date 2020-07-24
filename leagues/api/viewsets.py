@@ -3,48 +3,92 @@ from .serializers import (
     LeaguePublicSerializer,
     DivisionSerializer,
     RoleSerializer,
-    ApplyLeagueCodeSerializer
+    LevelSerializer
 )
 
 from .permissions import (
-    IsManager, IsCodeOwner, ListCodePermission,
-    IsRoleOwner, IsDivisionOwner, IsUmpireOwner, IsLeagueOwner
+    IsManager, IsRoleOwner, IsDivisionOwner,
+    IsUmpireOwner, IsLeagueOwner, IsLevelOwner,
+    LevelListQueryRequired
 )
 
-from rest_framework import viewsets, mixins, status
+from backend.permissions import (
+    IsSuperUser, ActionBasedPermission
+)
+
+from rest_framework import viewsets, mixins, status, permissions
 from rest_framework.response import Response
-from backend.permissions import ActionBasedPermission
 from drf_multiple_serializer import ActionBaseSerializerMixin
-from ..models import League, Division, Role, ApplyLeagueCode
+from ..models import League, Division, Role, Level
+from django.urls import reverse
+from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
 
 
-class ApplyLeagueCodeViewSet(viewsets.ModelViewSet):
-    queryset = ApplyLeagueCode.objects.all()
+class LevelViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    Provide Create, Destroy, List, List-filter functionality for Level model
+
+    create: Create Level \n
+    * Permissions: IsManager
+    * Extra Validations:
+        * Must be owner of league and roles the level is linked to
+
+    destroy: Destroy Level \n
+    * Permissions: IsLevelOwner
+
+    list: List Level \n
+    * Permissions: LevelListQueryRequired. The league filter field must be provided and the user must be in the league
+
+    move_level: Change Level Ordering \n
+    * Permissions: IsLevelOwner
+    * Extra Validations:
+        * "order" field is required
+        * "order" value must be within valid range
+    * Extra Notes:
+        * Ignore below, order is only required field. "order" is 0 indexed, and the level will move to the specified order index
+    """
+
+    queryset = Level.objects.all()
+    serializer_class = LevelSerializer
     filter_fields = ('league', )
-    serializer_class = ApplyLeagueCodeSerializer
-    permission_classes = (ActionBasedPermission, )
+    permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
-        IsManager: ['create'],  # league validated on serializer level
-        IsCodeOwner: ['retrieve', 'update', 'partial_update', 'destroy'],
-        ListCodePermission: ['list']
+        IsManager: ['create'],  # league/roles validated on serializer level
+        IsLevelOwner: ['move_level', 'destroy'],
+        LevelListQueryRequired: ['list']
     }
 
-    # @action(detail=True, methods=['post'])
-    # def validate_code(self, request):
-    #     code = request.data.get('code', None)
-    #     if code is None:
-    #         return Response({"error": "missing parameeters"}, status=status.HTTP_400_BAD_REQUEST)
-    #     if ApplyLeagueCode.objects.filter(code=code).exists():
-    #         return Response()
-    #     else:
-    #         return Response({"ApplyLeagueCode": ["invalid code"]}, status=status.HTTP_400_BAD_REQUEST)
-        # code_object = ApplyLeagueCode.objects.ge
+    @action(detail=True, methods=['patch'])
+    def move_level(self, request, pk):
+        level = self.get_object()
+        level_set = Level.objects.filter(league=level.league)
+        order = int(request.data.get('order', None))
+        if order is None:
+            return Response({"error": "missing parameeters"}, status=status.HTTP_400_BAD_REQUEST)
+        if order < level_set.get_min_order() or order > level_set.get_max_order():
+            return Response({"order": "order value out of range"}, status=status.HTTP_400_BAD_REQUEST)
+        level.to(order)
+        return Response(status=status.HTTP_200_OK)
+
 
 
 class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    Provide Create/Destroy functionality for Roles
+
+    create: Create Role \n
+    * Permissions: IsManager
+    * Extra Validations:
+        * Must be owner of league the role is linked to
+
+    destroy: Destroy Division \n
+    * Permissions: IsRoleOwner
+    """
+
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = (ActionBasedPermission, )
+    permission_classes = (IsSuperUser | ActionBasedPermission, )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
         IsRoleOwner: ['destroy']
@@ -52,9 +96,21 @@ class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.Ge
 
 
 class DivisionViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    Provide Create/Destroy functionality for Divisions
+
+    create: Create Division \n
+    * Permissions: IsManager
+    * Extra Validations:
+        * Must be owner of league the division is linked to
+
+    destroy: Destroy Division \n
+    * Permissions: IsDivisionOwner
+    """
+
     queryset = Division.objects.all()
     serializer_class = DivisionSerializer
-    permission_classes = (ActionBasedPermission, )
+    permission_classes = (IsSuperUser | ActionBasedPermission, )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
         IsDivisionOwner: ['destroy']
@@ -62,13 +118,38 @@ class DivisionViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewset
 
 
 class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
+    """
+    Provide CRUD, List, List-Filter functionality for League
+
+    create: Create League \n
+    * Permissions: IsManager
+    * Extra Notes:
+        * Manager automatically added to created league
+
+    retrieve: Retrieve League \n
+    * Permissions: IsLeagueOwner
+
+    update: Full Update League \n
+    * Permissions: IsLeagueOwner
+
+    partial_update: Partial Update League \n
+    * Permissions: IsLeagueOwner
+
+    destroy: Destroy League \n
+    * Permissions: IsLeagueOwner
+
+    list: List League \n
+    * Permissions: IsUmpireOwner (if using user query param)
+    * Query Params: User
+    """
+
     queryset = League.objects.all()
     filter_fields = ('user', )
     serializer_classes = {
         'default': LeaguePrivateSerializer,
         'list': LeaguePublicSerializer
     }
-    permission_classes = (ActionBasedPermission, )
+    permission_classes = (IsSuperUser | ActionBasedPermission, )
     action_permissions = {
         IsManager: ['create'],
         IsUmpireOwner: ['list'],
