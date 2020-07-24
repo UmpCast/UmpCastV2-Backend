@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_yasg',
     'ordered_model',
+    'sslserver',
 
     # amazon aws s3
     'storages',
@@ -98,8 +99,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('ENGINE'),
-        'NAME': config('NAME'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'db',
+        'PORT': 5432
     }
 }
 
