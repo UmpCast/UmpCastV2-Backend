@@ -39,3 +39,18 @@ class IsUserLeagueStatusOwner(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         return UserLeagueStatus.objects.filter(pk=view.kwargs['pk'], user=request.user).exists()
+
+
+class IsUserLeagueStatusManager(permissions.BasePermission):
+    """
+    Check if request user is manager of the UserLeagueStatus
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        if not request.user.is_manager():
+            return False
+        if UserLeagueStatus.objects.get(pk=view.kwargs['pk']).league not in request.user.leagues.all():
+            return False
+        return True

@@ -73,6 +73,13 @@ class UserLeagueStatusSerializer(serializers.ModelSerializer):
         read_only_fields = ('pk', 'date_pending', 'visibilities')
         create_only_fields = ('user', 'league')
 
+    def create(self, validated_data):
+        user = validated_data.pop('user', None)
+        league = validated_data.pop('league', None)
+        if not (user and league):
+            raise ValidationError("missing parameters")
+        return UserLeagueStatus.objects.create(user=user, league=league)
+
     def update(self, instance, validated_data):  # remove create_only_fields from dictionary
         for field in UserLeagueStatusSerializer.Meta.create_only_fields:
             validated_data.pop(field, None)

@@ -6,7 +6,7 @@ from .serializers import (
 )
 from .permissions import (
     IsLeagueMember, IsUserOwner,
-    IsUserLeagueStatusOwner
+    IsUserLeagueStatusManager, IsUserLeagueStatusOwner
 )
 from rest_framework import viewsets, mixins, permissions, status
 from drf_multiple_serializer import ActionBaseSerializerMixin
@@ -78,18 +78,20 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     * Permissions: IsAuthenticated
     * Extra Validations:
         * Can only create UserLeagueStatus using current user
+        * There can only exist one User/League pair
+        * Only user/league can be specified (other update operations restricted to manager)
 
     retrieve: Retrieve UserLeagueStatus \n
-    * Permissions: IsUserLeagueStatusOwner
+    * Permissions: IsUserLeagueStatusOwner or IsUserLeagueStatusManager
 
     update: Full Update UserLeagueStatus \n
-    * Permissions: IsUserLeagueStatusOwner
+    * Permissions: IsUserLeagueStatusManager
 
     partial_update: Partial Update UserLeagueStatus \n
-    * Permissions: IsUserLeagueStatusOwner
+    * Permissions: IsUserLeagueStatusManager
 
     destroy: Destroy UserLeagueStatus \n
-    * Permissions: IsUserLeagueStatusOwner
+    * Permissions: IsUserLeagueStatusOwner or IsUserLeagueStatusManager
 
     list: List UserLeagueStatus \n
     * Permissions: IsAuthenticated (only user pk is provided, no private info)
@@ -105,8 +107,9 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     serializer_class = UserLeagueStatusSerializer
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
-        permissions.IsAuthenticated: ['create', 'list', 'apply_level'],  # user restriction enforced on serializer level
-        IsUserLeagueStatusOwner: ['retrieve', 'update', 'partial_update', 'destroy'],
+        permissions.IsAuthenticated: ['create', 'list'],  # user restriction enforced on serializer level
+        IsUserLeagueStatusOwner | IsUserLeagueStatusManager: ['retrieve', 'destroy'],
+        IsUserLeagueStatusManager: ['apply_level', 'update', 'partial_update'],
     }
 
     @action(detail=True, methods=['post'])
@@ -119,8 +122,8 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         if not Level.objects.filter(pk=level_pk).exists():
             return Response({"level": ["invalid level pk"]}, status=status.HTTP_400_BAD_REQUEST)
         level_obj = Level.objects.get(pk=level_pk)
-        if level_obj.league not in request.user.leagues.all():
-            return Response({"level": ["you are not the owner of this level"]}, status=status.HTTP_400_BAD_REQUEST)
+        if level_obj.league != uls.league:  # permissions inherently checks if manager owns level
+            return Response({"level": ["level from one league cannot be applied to uls of another league"]}, status=status.HTTP_400_BAD_REQUEST)
         for role in level_obj.roles.all():
             uls.visibilities.add(role)
         return Response(status=status.HTTP_200_OK)

@@ -80,7 +80,3 @@ class UserLeagueStatus(models.Model):
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
     visibilities = models.ManyToManyField(Role)
-
-    def set_max_casts(self, max_casts):
-        self.max_casts = max_casts
-        self.save()
