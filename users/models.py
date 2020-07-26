@@ -75,26 +75,11 @@ class UserLeagueStatus(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     date_pending = models.DateTimeField(default=now)
     date_joined = models.DateTimeField(default=now)
-
-    JOIN_STATUS_CHOICES = (
-        ('pending', 'pending'),
-        ('accepted', 'accepted'),
-    )
-
-    join_status = models.CharField(max_length=10, choices=JOIN_STATUS_CHOICES, default="pending")
+    is_pending = models.BooleanField(default=True)
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
     visibilities = models.ManyToManyField(Role)
-
-    def accept_user(self):
-        self.join_status = 'accepted'
-        self.date_joined = now
-        self.save()
-
-    def remove_user(self):
-        self.join_status = 'pending'
-        self.save()
 
     def set_max_casts(self, max_casts):
         self.max_casts = max_casts
