@@ -69,8 +69,8 @@ class UserLeagueStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserLeagueStatus
-        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'is_pending', 'max_casts')
-        read_only_fields = ('pk', 'date_pending')
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'is_pending', 'max_casts', 'visibilities')
+        read_only_fields = ('pk', 'date_pending', 'visibilities')
         create_only_fields = ('user', 'league')
 
     def update(self, instance, validated_data):  # remove create_only_fields from dictionary
@@ -82,3 +82,10 @@ class UserLeagueStatusSerializer(serializers.ModelSerializer):
         if user != self.context['request'].user:
             raise ValidationError("Can only create UserLeagueStatus using current user")
         return user
+
+    def validate(self, validated_data):
+        user = validated_data.get('user', None)
+        league = validated_data.get('league', None)
+        if UserLeagueStatus.objects.filter(user=user, league=league).exists():
+            raise ValidationError("this user/league combo already exists, cannot create")
+        return validated_data
