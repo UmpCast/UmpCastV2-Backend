@@ -64,7 +64,7 @@ class LevelViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.Lis
         level_set = Level.objects.filter(league=level.league)
         order = int(request.data.get('order', None))
         if order is None:
-            return Response({"error": "missing parameeters"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "missing parameters"}, status=status.HTTP_400_BAD_REQUEST)
         if order < level_set.get_min_order() or order > level_set.get_max_order():
             return Response({"order": "order value out of range"}, status=status.HTTP_400_BAD_REQUEST)
         level.to(order)
