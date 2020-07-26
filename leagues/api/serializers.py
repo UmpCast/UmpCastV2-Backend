@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from ..models import League, Division, Role, Level
 from rest_framework.serializers import ValidationError
-from backend import mixins
+from users.models import UserLeagueStatus
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -77,7 +77,9 @@ class LeaguePrivateSerializer(serializers.ModelSerializer):
             'this line should not be reachable. request user must be manager to create league'
         )
         league = super().create(validated_data)
-        self.context['request'].user.leagues.add(league)
+        user = self.context['request'].user
+        user.leagues.add(league)
+        uls = UserLeagueStatus.objects.create(league=league, user=user, is_pending=False)
         return league
 
 

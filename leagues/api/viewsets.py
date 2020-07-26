@@ -22,7 +22,6 @@ from drf_multiple_serializer import ActionBaseSerializerMixin
 from ..models import League, Division, Role, Level
 from django.urls import reverse
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
 
 
 class LevelViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -82,7 +81,7 @@ class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.Ge
     * Extra Validations:
         * Must be owner of league the role is linked to
 
-    destroy: Destroy Division \n
+    destroy: Destroy Role \n
     * Permissions: IsRoleOwner
     """
 
