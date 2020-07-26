@@ -103,7 +103,7 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         * Ignore below. The only required post field is "level", the pk of the level object
     """
     queryset = UserLeagueStatus.objects.all()
-    filter_fields = ('user', 'league')
+    filter_fields = ('user', 'league', 'request_status')
     serializer_class = UserLeagueStatusSerializer
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {

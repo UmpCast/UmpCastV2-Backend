@@ -75,7 +75,14 @@ class UserLeagueStatus(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     date_pending = models.DateTimeField(default=now)
     date_joined = models.DateTimeField(default=now)
-    is_pending = models.BooleanField(default=True)
+
+    REQUEST_STATUS_CHOICES = (
+        ('accepted', 'accepted'),
+        ('pending', 'pending'),
+        ('rejected', 'rejected'),
+    )
+
+    request_status = models.CharField(max_length=10, choices=REQUEST_STATUS_CHOICES, default='pending')
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
