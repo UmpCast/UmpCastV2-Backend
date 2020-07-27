@@ -79,7 +79,6 @@ class LeaguePrivateSerializer(serializers.ModelSerializer):
         league = super().create(validated_data)
         user = self.context['request'].user
         user.leagues.add(league)
-        uls = UserLeagueStatus.objects.create(league=league, user=user, request_status='accepted')
         return league
 
 
