@@ -86,7 +86,7 @@ class TestUserLeagueStatusAPI(mixins.TestModelMixin, APITestCase):
 
     def test_apply_level(self):
         uls = baker.make('users.UserLeagueStatus', user=self.user)
-        level = baker.make('leagues.Level')
+        level = baker.make('leagues.Level', league=uls.league)
         self.user.leagues.add(level.league)
         url = reverse('user-league-status-apply-level', kwargs={'pk': uls.pk})
         response = self.client.post(url, data={"level": level.pk})

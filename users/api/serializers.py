@@ -87,7 +87,7 @@ class UserLeagueStatusSerializer(serializers.ModelSerializer):
 
     def validate_user(self, user):
         if user != self.context['request'].user:
-            raise ValidationError("Can only create UserLeagueStatus using current user")
+            raise ValidationError("UserLeagueStatus user can only be defined on creation/must be with current user")
         return user
 
     def validate(self, validated_data):
