@@ -22,6 +22,8 @@ class League(models.Model):
     adv_scheduling_limit = models.IntegerField(default=30)  # how many days in advance games are scheduled
     public_access = models.BooleanField(default=False)
     can_apply = models.BooleanField(default=True)
+    email = models.EmailField(max_length=64, blank=True,  null=True)
+    website_url = models.CharField(max_length=64, blank=True, null=True)
 
     # team snap fields
     ts_id = models.IntegerField(default=0)

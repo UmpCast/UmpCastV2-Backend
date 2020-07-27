@@ -69,7 +69,7 @@ class LeaguePrivateSerializer(serializers.ModelSerializer):
     class Meta:
         model = League
         fields = ('pk', 'title', 'description', 'divisions', 'levels', 'league_picture', 'public_access',
-                  'date_joined', 'expiration_date', 'adv_scheduling_limit', 'ts_id', 'opponent_library', 'can_apply')
+                  'date_joined', 'expiration_date', 'adv_scheduling_limit', 'ts_id', 'opponent_library', 'can_apply', 'website_url', 'email')
         read_only_fields = ('pk', 'date_joined')
 
     def create(self, validated_data):
@@ -87,5 +87,5 @@ class LeaguePublicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = League
-        fields = ('pk', 'title', 'description', 'league_picture', 'can_apply')
-        read_only_fields = ('pk', 'title', 'description', 'league_picture', 'can_apply')
+        fields = ('pk', 'title', 'description', 'league_picture', 'can_apply', 'website_url', 'email')
+        read_only_fields = ('pk', 'title', 'description', 'league_picture', 'can_apply', 'website_url', 'email')
