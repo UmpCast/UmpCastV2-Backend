@@ -60,6 +60,8 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if 'password' in validated_data:
+            if 'password2' not in validated_data:  # password2 must be passed in, validation in validate_password2
+                raise ValidationError("must provide password2 when updating password")
             instance.set_password(validated_data.pop('password'))
         instance.save()
         return super().update(instance, validated_data)
