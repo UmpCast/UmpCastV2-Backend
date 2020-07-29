@@ -26,7 +26,7 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
                   'first_name', 'last_name', 'is_configured',
                   'phone_number', 'phone_notifications', 'profile_picture',
                   'date_joined', 'password', 'password2')
-        read_only_fields = ('pk',)
+        read_only_fields = ('pk', 'leagues')
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -66,8 +66,6 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 class UserLeagueStatusSerializer(serializers.ModelSerializer):
-    user = UserProfilePublicSerializer(many=False, read_only=True)
-    league = LeaguePublicSerializer(many=False, read_only=True)
 
     class Meta:
         model = UserLeagueStatus
@@ -80,10 +78,7 @@ class UserLeagueStatusSerializer(serializers.ModelSerializer):
         league = validated_data.pop('league', None)
         if not (user and league):
             raise ValidationError("missing parameters")
-        request_status = 'pending'
-        if not UserLeagueStatus.objects.filter(league=league).exists():
-            request_status = 'accepted'
-        return UserLeagueStatus.objects.create(user=user, league=league, request_status=request_status)
+        return UserLeagueStatus.objects.create(user=user, league=league, request_status='pending')
 
     def update(self, instance, validated_data):  # remove create_only_fields from dictionary
         for field in UserLeagueStatusSerializer.Meta.create_only_fields:
