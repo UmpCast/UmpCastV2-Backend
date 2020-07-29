@@ -65,7 +65,10 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         instance.save()
         return super().update(instance, validated_data)
 
+
 class UserLeagueStatusSerializer(serializers.ModelSerializer):
+    user = UserProfilePublicSerializer(many=False, read_only=False)
+    league = LeaguePublicSerializer(many=False, read_only=False)
 
     class Meta:
         model = UserLeagueStatus
