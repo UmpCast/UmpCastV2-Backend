@@ -64,7 +64,7 @@ class DivisionSerializer(serializers.ModelSerializer):
 
 class LeaguePrivateSerializer(serializers.ModelSerializer):
     divisions = DivisionSerializer(source='division_set', many=True, read_only=True)
-    levels = DivisionSerializer(source='level_set', many=True, read_only=True)
+    levels = LevelSerializer(source='level_set', many=True, read_only=True)
 
     class Meta:
         model = League
