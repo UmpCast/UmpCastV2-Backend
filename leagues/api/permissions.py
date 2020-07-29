@@ -7,7 +7,7 @@ class IsLevelOwner(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         level = Level.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and level.league in request.user.leagues.all()
+        return request.user.is_manager() and level.league in request.user.leagues.accepted()
 
 
 class LevelListQueryRequired(permissions.BasePermission):
@@ -19,7 +19,7 @@ class LevelListQueryRequired(permissions.BasePermission):
             return False
         if League.objects.filter(pk=league_pk).exists():
             league = League.objects.get(pk=league_pk)
-            return league in request.user.leagues.all()
+            return league in request.user.leagues.accepted()
         else:
             return False
 
@@ -29,7 +29,7 @@ class IsRoleOwner(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         role = Role.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and role.division.league in request.user.leagues.all()
+        return request.user.is_manager() and role.division.league in request.user.leagues.accepted()
 
 
 class IsDivisionOwner(permissions.BasePermission):
@@ -37,7 +37,7 @@ class IsDivisionOwner(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         division = Division.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and division.league in request.user.leagues.all()
+        return request.user.is_manager() and division.league in request.user.leagues.accepted()
 
 
 class IsUmpireOwner(permissions.BasePermission):
@@ -55,4 +55,4 @@ class IsLeagueOwner(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         league = League.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and league in request.user.leagues.all()
+        return request.user.is_manager() and league in request.user.leagues.accepted()

@@ -13,6 +13,21 @@ def set_apply_league_expiration_date():
     return now() + timedelta(days=7)
 
 
+class LeagueRelatedModelManager(models.Manager):
+    """Custom RelatedModelManager to filter leagues by through UserLeagueStatus model"""
+
+    use_for_related_fields = True
+
+    def accepted(self):
+        return self.get_queryset().filter(userleaguestatus__request_status='accepted')
+
+    def pending(self):
+        return self.get_queryset().filter(userleaguestatus__request_status='pending')
+
+    def rejected(self):
+        return self.get_queryset().filter(userleaguestatus__request_status='rejected')
+
+
 class League(models.Model):
     title = models.CharField(max_length=32)
     description = models.TextField(max_length=1028, null=True, blank=True)
@@ -24,6 +39,9 @@ class League(models.Model):
     can_apply = models.BooleanField(default=True)
     email = models.EmailField(max_length=64, blank=True,  null=True)
     website_url = models.CharField(max_length=64, blank=True, null=True)
+
+    # uls m2m custom manager
+    objects = LeagueRelatedModelManager()
 
     # team snap fields
     ts_id = models.IntegerField(default=0)

@@ -25,7 +25,7 @@ class IsLeagueMember(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         league_pk = request.query_params.get('league', None)
-        if league_pk is not None and request.user.leagues.filter(pk=league_pk).exists():
+        if league_pk is not None and request.user.leagues.accepted().filter(pk=league_pk).exists():
             return True
         return request.user.is_superuser
 
@@ -51,6 +51,24 @@ class IsUserLeagueStatusManager(permissions.BasePermission):
             return False
         if not request.user.is_manager():
             return False
-        if UserLeagueStatus.objects.get(pk=view.kwargs['pk']).league not in request.user.leagues.all():
+        if UserLeagueStatus.objects.get(pk=view.kwargs['pk']).league not in request.user.leagues.accepted():
             return False
         return True
+
+
+class UserLeagueStatusFilterPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        league_pk = request.query_params.get('league', None)
+        user_pk = request.query_params.get('user', None)
+        if league_pk is None and user_pk is None:
+            return False
+
+        # if request.user.is_manager():
+        #     if user_pk is not None and league_pk is None:
+        #         return False
+        #
+        # if request.user.is_umpire():
+        #     pass
+        return False

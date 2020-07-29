@@ -15,7 +15,7 @@ class RoleSerializer(serializers.ModelSerializer):
     def validate_division(self, division):
         if self.context['request'].method != 'POST':
             return division
-        if division.league in self.context['request'].user.leagues.all():
+        if division.league in self.context['request'].user.leagues.accepted():
             return division
         else:
             raise ValidationError("Can only create role for a league you own")
@@ -32,7 +32,7 @@ class LevelSerializer(serializers.ModelSerializer):
     def validate_league(self, league):
         if self.context['request'].method != 'POST':
             return league
-        if league in self.context['request'].user.leagues.all():
+        if league in self.context['request'].user.leagues.accepted():
             return league
         else:
             raise ValidationError("Can only create role for a league you own")
@@ -56,7 +56,7 @@ class DivisionSerializer(serializers.ModelSerializer):
     def validate_league(self, league):
         if self.context['request'].method != 'POST':
             return league
-        if league in self.context['request'].user.leagues.all():
+        if league in self.context['request'].user.leagues.accepted():
             return league
         else:
             raise ValidationError("Can only create divison for a league you own")
@@ -78,7 +78,13 @@ class LeaguePrivateSerializer(serializers.ModelSerializer):
         )
         league = super().create(validated_data)
         user = self.context['request'].user
-        user.leagues.add(league)
+
+        # adds user to league with request_status=accepted
+        UserLeagueStatus.objects.create(
+            user=user,
+            league=league,
+            request_status='accepted'
+        )
         return league
 
 

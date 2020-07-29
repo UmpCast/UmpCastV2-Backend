@@ -24,7 +24,7 @@ class UserModelManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User Model"""
-    leagues = models.ManyToManyField(League, blank=True)
+    leagues = models.ManyToManyField(League, blank=True, through='UserLeagueStatus')
     email = models.EmailField(max_length=64, unique=True)
     email_notifications = models.BooleanField(default=True)
     first_name = models.CharField(max_length=32)
