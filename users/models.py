@@ -81,4 +81,5 @@ class UserLeagueStatus(models.Model):
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
+    max_backups = models.IntegerField(default=0)
     visibilities = models.ManyToManyField(Role)

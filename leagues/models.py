@@ -40,6 +40,10 @@ class League(models.Model):
     email = models.EmailField(max_length=64, blank=True,  null=True)
     website_url = models.CharField(max_length=64, blank=True, null=True)
 
+    # defaults
+    default_max_cast = models.IntegerField(default=0)
+    default_max_backup = models.IntegerField(default=0)
+
     # uls m2m custom manager
     objects = LeagueRelatedModelManager()
 

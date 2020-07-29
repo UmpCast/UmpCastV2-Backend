@@ -71,7 +71,8 @@ class UserLeagueStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserLeagueStatus
-        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'request_status', 'max_casts', 'visibilities')
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined',
+                    'request_status', 'max_casts', 'max_backups', 'visibilities')
         read_only_fields = ('pk', 'date_pending', 'visibilities')
         create_only_fields = ('user', 'league')
 
