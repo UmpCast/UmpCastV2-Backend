@@ -7,13 +7,13 @@ from .serializers import (
 )
 
 from .permissions import (
-    IsManager, IsRoleOwner, IsDivisionOwner,
+    IsRoleOwner, IsDivisionOwner,
     IsUmpireOwner, IsLeagueOwner, IsLevelOwner,
     LevelListQueryRequired
 )
 
 from backend.permissions import (
-    IsSuperUser, ActionBasedPermission
+    IsSuperUser, ActionBasedPermission, IsManager
 )
 
 from rest_framework import viewsets, mixins, status, permissions

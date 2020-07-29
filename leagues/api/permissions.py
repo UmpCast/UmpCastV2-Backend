@@ -24,13 +24,6 @@ class LevelListQueryRequired(permissions.BasePermission):
             return False
 
 
-class IsManager(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        return request.user.is_manager()
-
-
 class IsRoleOwner(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
@@ -43,7 +36,7 @@ class IsDivisionOwner(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        division = League.objects.get(pk=view.kwargs['pk'])
+        division = Division.objects.get(pk=view.kwargs['pk'])
         return request.user.is_manager() and division.league in request.user.leagues.all()
 
 
