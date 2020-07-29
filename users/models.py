@@ -31,7 +31,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=32)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    is_configured = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=10, blank=True)
     phone_notifications = models.BooleanField(default=True)
     profile_picture = models.ImageField(upload_to='profile_pics/%Y/%m/', null=True, blank=True)
@@ -48,10 +47,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserModelManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
-
-    def configure_user(self):
-        self.is_configured = True
-        self.save()
 
     def get_full_name(self):
         return ' '.join([self.first_name, self.last_name])

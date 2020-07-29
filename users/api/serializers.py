@@ -23,8 +23,7 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('pk', 'account_type', 'leagues', 'email', 'email_notifications',
-                  'first_name', 'last_name', 'is_configured',
-                  'phone_number', 'phone_notifications', 'profile_picture',
+                  'first_name', 'last_name', 'phone_number', 'phone_notifications', 'profile_picture',
                   'date_joined', 'password', 'password2')
         read_only_fields = ('pk', 'leagues')
         extra_kwargs = {
