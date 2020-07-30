@@ -49,7 +49,7 @@ class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
 
     def get_valid_create(self):
         league = baker.make('leagues.League')
-        self.user.leagues.add(league)
+        self.user.leagues.add(league, through_defaults = {'request_status': 'accepted'})
         return {
             'title': 'test division 1',
             'league': league.pk
@@ -69,10 +69,10 @@ class TestLevelAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
 
     def get_valid_create(self):
         role = baker.make('leagues.Role')
-        self.user.leagues.add(role.division.league)
+        self.user.leagues.add(role.division.league, through_defaults = {'request_status': 'accepted'})
         return {
             'league': role.division.league.pk,
-            'roles': [role.pk]
+            'visibilities': [role.pk]
         }
 
     def get_filter_queries(self):
@@ -101,7 +101,7 @@ class TestRoleAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
 
     def get_valid_create(self):
         division = baker.make('leagues.Division')
-        self.user.leagues.add(division.league)
+        self.user.leagues.add(division.league, through_defaults = {'request_status': 'accepted'})
         return {
             'title': 'test role 1',
             'division': division.pk
