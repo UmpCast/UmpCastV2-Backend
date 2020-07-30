@@ -1,13 +1,19 @@
 from ..models import User, UserLeagueStatus
-from .serializers import (
-    UserProfilePublicSerializer,
-    UserProfilePrivateSerializer,
-    UserLeagueStatusSerializer
+
+from .serializers.user import (
+    UserProfilePublicSerializer, UserProfilePrivateCreateSerializer,
+    UserProfilePrivateRetrieveSerializer, UserProfilePrivateUpdateSerializer
 )
+
+from .serializers.userleaguestatus import (
+    UserLeagueStatusCreateSerializer, UserLeagueStatusRetrieveSerializer, UserLeagueStatusUpdateSerializer
+)
+
 from .permissions import (
     IsLeagueMember, IsUserOwner,
     IsUserLeagueStatusManager, IsUserLeagueStatusOwner
 )
+
 from rest_framework import viewsets, mixins, permissions, status
 from drf_multiple_serializer import ActionBaseSerializerMixin
 from backend.permissions import (
@@ -52,7 +58,10 @@ class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Ret
     filter_fields = ('leagues', 'account_type')
 
     serializer_classes = {
-        'default': UserProfilePrivateSerializer,
+        'default': UserProfilePrivateRetrieveSerializer,
+        'create': UserProfilePrivateCreateSerializer,
+        'update': UserProfilePrivateUpdateSerializer,
+        'partial_update': UserProfilePrivateUpdateSerializer,
         'list': UserProfilePublicSerializer
     }
 
@@ -104,7 +113,14 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     """
     queryset = UserLeagueStatus.objects.all()
     filter_fields = ('user', 'league', 'request_status')
-    serializer_class = UserLeagueStatusSerializer
+
+    serializer_classes = {
+        'default': UserLeagueStatusRetrieveSerializer,
+        'create': UserLeagueStatusCreateSerializer,
+        'update': UserLeagueStatusUpdateSerializer,
+        'partial_update': UserLeagueStatusUpdateSerializer
+    }
+
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
         permissions.IsAuthenticated: ['create', 'list'],  # user restriction enforced on serializer level
