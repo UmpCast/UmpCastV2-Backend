@@ -24,7 +24,7 @@ from django.urls import reverse
 from rest_framework.decorators import action
 
 
-class LevelViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class LevelViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Destroy, List, List-filter functionality for Level model
 
@@ -54,7 +54,7 @@ class LevelViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.Lis
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
         IsManager: ['create'],  # league/roles validated on serializer level
-        IsLevelOwner: ['move_level', 'destroy'],
+        IsLevelOwner: ['move_level', 'update', 'partial_update', 'destroy'],
         LevelListQueryRequired: ['list']
     }
 

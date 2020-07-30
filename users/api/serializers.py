@@ -75,7 +75,7 @@ class UserLeagueStatusSerializer(serializers.ModelSerializer):
         model = UserLeagueStatus
         fields = ('pk', 'user', 'league', 'date_pending', 'date_joined',
                     'request_status', 'max_casts', 'max_backups', 'visibilities')
-        read_only_fields = ('pk', 'date_pending', 'visibilities')
+        read_only_fields = ('pk', 'date_pending')
         create_only_fields = ('user', 'league')
 
     def create(self, validated_data):

@@ -35,7 +35,7 @@ class LevelSerializer(serializers.ModelSerializer):
         if league in self.context['request'].user.leagues.accepted():
             return league
         else:
-            raise ValidationError("Can only create role for a league you own")
+            raise ValidationError("League can only be specified on creation/must be with a owned league")
 
     def validate(self, data):
         for role in data['roles']:
