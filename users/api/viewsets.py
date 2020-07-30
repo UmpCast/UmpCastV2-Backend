@@ -124,6 +124,6 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         level_obj = Level.objects.get(pk=level_pk)
         if level_obj.league != uls.league:  # permissions inherently checks if manager owns level
             return Response({"level": ["level from one league cannot be applied to uls of another league"]}, status=status.HTTP_400_BAD_REQUEST)
-        for role in level_obj.roles.all():
+        for role in level_obj.visibilities.all():
             uls.visibilities.add(role)
         return Response(status=status.HTTP_200_OK)

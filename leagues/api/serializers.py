@@ -25,9 +25,9 @@ class LevelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Level
-        fields = ('pk', 'title', 'league', 'roles', 'order')
+        fields = ('pk', 'title', 'league', 'visibilities', 'order')
         read_only_fields = ('pk', )
-        # create_only_fields = ('title', 'league', 'roles')
+        create_only_fields = ('league', )
 
     def validate_league(self, league):
         if self.context['request'].method != 'POST':
@@ -37,10 +37,20 @@ class LevelSerializer(serializers.ModelSerializer):
         else:
             raise ValidationError("League can only be specified on creation/must be with a owned league")
 
+    def update(self, instance, validated_data):  # remove create_only_fields from dictionary
+        for field in LevelSerializer.Meta.create_only_fields:
+            validated_data.pop(field, None)
+        if 'visibilities' in validated_data:
+            for visibility in validated_data['visibilities']:
+                if visibility.division.league != instance.league:
+                    raise ValidationError('roles in visibilities from wrong league added to level')
+        return super().update(instance, validated_data)
+
     def validate(self, data):
-        for role in data['roles']:
-            if role.division.league != data['league']:
-                raise ValidationError('roles for level must be from league')
+        if self.context['request'].method == 'POST':
+            for visibility in data['visibilities']:
+                if visibility.division.league != data['league']:
+                    raise ValidationError('roles in visibilities for level must be from league')
         return super().validate(data)
 
 
