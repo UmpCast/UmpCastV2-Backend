@@ -1,19 +1,22 @@
 from rest_framework import permissions
 from ..models import League, Division, Role, Level
+from users.models import User
 
 
 class IsLevelOwner(permissions.BasePermission):
+    """
+    Checks to see if a user is a manager that has access rights to a level in a given league
+    """
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
         level = Level.objects.get(pk=view.kwargs['pk'])
         return request.user.is_manager() and level.league in request.user.leagues.accepted()
 
 
 class LevelListQueryRequired(permissions.BasePermission):
+    """
+    Checks to see if a user has viewing rights to a filtered list of levels
+    """
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
         league_pk = request.query_params.get('league', None)
         if league_pk is None:
             return False
@@ -25,34 +28,38 @@ class LevelListQueryRequired(permissions.BasePermission):
 
 
 class IsRoleOwner(permissions.BasePermission):
+    """
+    Checks to see if a user is a manager with access rights to a given role
+    """
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
         role = Role.objects.get(pk=view.kwargs['pk'])
         return request.user.is_manager() and role.division.league in request.user.leagues.accepted()
 
 
 class IsDivisionOwner(permissions.BasePermission):
+    """
+    Checks to see if a user is a manager with access rights to a given division
+    """
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
         division = Division.objects.get(pk=view.kwargs['pk'])
         return request.user.is_manager() and division.league in request.user.leagues.accepted()
 
 
 class IsUmpireOwner(permissions.BasePermission):
+    """
+    List all leagues if no user_pk is supplied. If supplied, must be current user
+    """
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
         user_pk = request.query_params.get('user', None)
         if user_pk is None:
             return True
-        return request.user.pk == int(user_pk)
+        return request.user == User.objects.get(pk=user_pk)
 
 
 class IsLeagueOwner(permissions.BasePermission):
+    """
+    Checks to see if a given user is a manager and has access rights to a given league
+    """
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
         league = League.objects.get(pk=view.kwargs['pk'])
         return request.user.is_manager() and league in request.user.leagues.accepted()

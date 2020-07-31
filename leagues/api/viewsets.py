@@ -65,7 +65,7 @@ class LevelViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Up
         'partial_update': LevelUpdateSerializer
     }
     filter_fields = ('league', )
-    permission_classes = (IsSuperUser | ActionBasedPermission,)
+    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
         IsManager: ['create'],  # league/roles validated on serializer level
         IsLevelOwner: ['move_level', 'update', 'partial_update', 'destroy'],
@@ -83,7 +83,6 @@ class LevelViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Up
             return Response({"order": "order value out of range"}, status=status.HTTP_400_BAD_REQUEST)
         level.to(order)
         return Response(status=status.HTTP_200_OK)
-
 
 
 class RoleViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
@@ -104,7 +103,7 @@ class RoleViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Des
         'default': RoleRetrieveSerializer,
         'create': RoleCreateSerializer
     }
-    permission_classes = (IsSuperUser | ActionBasedPermission, )
+    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
         IsRoleOwner: ['destroy']
@@ -129,7 +128,7 @@ class DivisionViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins
         'default': DivisionRetrieveSerializer,
         'create': DivisionCreateSerializer
     }
-    permission_classes = (IsSuperUser | ActionBasedPermission, )
+    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
         IsDivisionOwner: ['destroy']
@@ -168,7 +167,7 @@ class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         'default': LeaguePrivateSerializer,
         'list': LeaguePublicSerializer
     }
-    permission_classes = (IsSuperUser | ActionBasedPermission, )
+    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],
         IsUmpireOwner: ['list'],
