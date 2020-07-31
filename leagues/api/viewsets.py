@@ -30,10 +30,12 @@ from drf_multiple_serializer import ActionBaseSerializerMixin
 from ..models import League, Division, Role, Level
 from django.urls import reverse
 from rest_framework.decorators import action
+from backend.mixins import MoveOrderedModelMixin
 
 
-class LevelViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,
-                    mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class LevelViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.CreateModelMixin,
+                        mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
     """
     Provide Create, Destroy, List, List-filter functionality for Level model
 
@@ -48,7 +50,7 @@ class LevelViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Up
     list: List Level \n
     * Permissions: LevelListQueryRequired. The league filter field must be provided and the user must be in the league
 
-    move_level: Change Level Ordering \n
+    move: Change Level Ordering \n
     * Permissions: IsLevelOwner
     * Extra Validations:
         * "order" field is required
@@ -68,24 +70,17 @@ class LevelViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Up
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
         IsManager: ['create'],  # league/roles validated on serializer level
-        IsLevelOwner: ['move_level', 'update', 'partial_update', 'destroy'],
+        IsLevelOwner: ['move', 'update', 'partial_update', 'destroy'],
         LevelListQueryRequired: ['list']
     }
 
-    @action(detail=True, methods=['patch'])
-    def move_level(self, request, pk):
-        level = self.get_object()
-        level_set = Level.objects.filter(league=level.league)
-        order = int(request.data.get('order', None))
-        if order is None:
-            return Response({"error": "missing parameters"}, status=status.HTTP_400_BAD_REQUEST)
-        if order < level_set.get_min_order() or order > level_set.get_max_order():
-            return Response({"order": "order value out of range"}, status=status.HTTP_400_BAD_REQUEST)
-        level.to(order)
-        return Response(status=status.HTTP_200_OK)
+    # move orders
+    move_filter_variable = 'league'
+    move_filter_value = 'league'
 
 
-class RoleViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class RoleViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
+                    mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Provide Create/Destroy functionality for Roles
 
@@ -96,6 +91,14 @@ class RoleViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Des
 
     destroy: Destroy Role \n
     * Permissions: IsRoleOwner
+
+    move: Change Role Ordering \n
+    * Permissions: IsRoleOwner
+    * Extra Validations:
+        * "order" field is required
+        * "order" value must be within valid range
+    * Extra Notes:
+        * Ignore below, order is only required field. "order" is 0 indexed, and the level will move to the specified order index
     """
 
     queryset = Role.objects.all()
@@ -106,11 +109,16 @@ class RoleViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Des
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
-        IsRoleOwner: ['destroy']
+        IsRoleOwner: ['move', 'destroy']
     }
 
+    # move orders
+    move_filter_variable = 'division'
+    move_filter_value = 'division'
 
-class DivisionViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+
+class DivisionViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
+                        mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Provide Create/Destroy functionality for Divisions
 
@@ -121,6 +129,14 @@ class DivisionViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins
 
     destroy: Destroy Division \n
     * Permissions: IsDivisionOwner
+
+    move: Change Division Ordering \n
+    * Permissions: IsDivisionOwner
+    * Extra Validations:
+        * "order" field is required
+        * "order" value must be within valid range
+    * Extra Notes:
+        * Ignore below, order is only required field. "order" is 0 indexed, and the level will move to the specified order index
     """
 
     queryset = Division.objects.all()
@@ -131,8 +147,12 @@ class DivisionViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
-        IsDivisionOwner: ['destroy']
+        IsDivisionOwner: ['move', 'destroy']
     }
+
+    # move orders
+    move_filter_variable = 'league'
+    move_filter_value = 'league'
 
 
 class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
