@@ -1,9 +1,17 @@
-from .serializers import (
-    LeaguePrivateSerializer,
-    LeaguePublicSerializer,
-    DivisionSerializer,
-    RoleSerializer,
-    LevelSerializer
+from .serializers.division import (
+    DivisionCreateSerializer, DivisionRetrieveSerializer
+)
+
+from .serializers.league import (
+    LeaguePrivateSerializer, LeaguePublicSerializer
+)
+
+from .serializers.role import (
+    RoleCreateSerializer, RoleRetrieveSerializer
+)
+
+from .serializers.level import (
+    LevelCreateSerializer, LevelRetrieveSerializer, LevelUpdateSerializer
 )
 
 from .permissions import (
@@ -24,7 +32,8 @@ from django.urls import reverse
 from rest_framework.decorators import action
 
 
-class LevelViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class LevelViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,
+                    mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Destroy, List, List-filter functionality for Level model
 
@@ -49,7 +58,12 @@ class LevelViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.Dest
     """
 
     queryset = Level.objects.all()
-    serializer_class = LevelSerializer
+    serializer_classes = {
+        'default': LevelRetrieveSerializer,
+        'create': LevelCreateSerializer,
+        'update': LevelUpdateSerializer,
+        'partial_update': LevelUpdateSerializer
+    }
     filter_fields = ('league', )
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
@@ -72,7 +86,7 @@ class LevelViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.Dest
 
 
 
-class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class RoleViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Provide Create/Destroy functionality for Roles
 
@@ -86,7 +100,10 @@ class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.Ge
     """
 
     queryset = Role.objects.all()
-    serializer_class = RoleSerializer
+    serializer_classes = {
+        'default': RoleRetrieveSerializer,
+        'create': RoleCreateSerializer
+    }
     permission_classes = (IsSuperUser | ActionBasedPermission, )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
@@ -94,7 +111,7 @@ class RoleViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.Ge
     }
 
 
-class DivisionViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class DivisionViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Provide Create/Destroy functionality for Divisions
 
@@ -108,7 +125,10 @@ class DivisionViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewset
     """
 
     queryset = Division.objects.all()
-    serializer_class = DivisionSerializer
+    serializer_classes = {
+        'default': DivisionRetrieveSerializer,
+        'create': DivisionCreateSerializer
+    }
     permission_classes = (IsSuperUser | ActionBasedPermission, )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level

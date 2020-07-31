@@ -1,8 +1,16 @@
 from users.models import UserLeagueStatus
 from rest_framework.serializers import ValidationError
-from leagues.api.serializers import LeaguePublicSerializer
+from leagues.api.serializers.league import LeaguePublicSerializer
 from users.api.serializers.user import UserProfilePublicSerializer
-from .base import UserLeagueStatusBaseSerializer
+from rest_framework import serializers
+
+class UserLeagueStatusBaseSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserLeagueStatus
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined',
+                    'request_status', 'max_casts', 'max_backups', 'visibilities')
+        read_only_fields = ('pk', 'date_pending')
 
 
 class UserLeagueStatusCreateSerializer(UserLeagueStatusBaseSerializer):
