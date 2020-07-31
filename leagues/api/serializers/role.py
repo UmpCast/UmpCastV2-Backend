@@ -7,8 +7,8 @@ class RoleBaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ('pk', 'title', 'division')
-        read_only_fields = ('pk',)
+        fields = ('pk', 'title', 'division', 'order')
+        read_only_fields = ('pk', 'order')
         # create_only_fields = ('division',)
 
 class RoleCreateSerializer(RoleBaseSerializer):

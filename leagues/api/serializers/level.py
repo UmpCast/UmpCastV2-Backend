@@ -8,15 +8,16 @@ class LevelBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Level
         fields = ('pk', 'title', 'league', 'visibilities', 'order')
-        read_only_fields = ('pk', )
+        read_only_fields = ('pk', 'order')
 
 
 class LevelCreateSerializer(LevelBaseSerializer):
 
     def validate(self, data):
-        for visibility in data['visibilities']:
-            if visibility.division.league != data['league']:
-                raise ValidationError('roles in visibilities for level must be from league')
+        if 'visibilities' in data:
+            for visibility in data['visibilities']:
+                if visibility.division.league != data['league']:
+                    raise ValidationError('roles in visibilities for level must be from league')
         return super().validate(data)
 
     def validate_league(self, league):

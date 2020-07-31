@@ -8,8 +8,8 @@ class DivisionBaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Division
-        fields = ('pk', 'title', 'league', 'ts_id', 'roles')
-        read_only_fields = ('pk',)
+        fields = ('pk', 'title', 'league', 'ts_id', 'roles', 'order')
+        read_only_fields = ('pk', 'order')
         # create_only_fields = ('league', )
 
 
