@@ -10,15 +10,15 @@ class LeagueAdmin(admin.ModelAdmin):
     list_per_page = 25
 
 
-class DivisionAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title', 'league', 'ts_id')
+class DivisionAdmin(OrderedModelAdmin):
+    list_display = ('pk', 'title', 'league', 'ts_id', 'move_up_down_links')
     list_display_links = ('pk', 'title')
     search_fields = ('title', )
     list_per_page = 25
 
 
-class RoleAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title', 'division')
+class RoleAdmin(OrderedModelAdmin):
+    list_display = ('pk', 'title', 'division', 'move_up_down_links')
     list_display_links = ('pk', 'title')
     search_fields = ('title', )
     list_per_page = 25
