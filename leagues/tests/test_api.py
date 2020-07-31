@@ -62,7 +62,7 @@ class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
         response = self.client.patch(move_url, data = {"order": 1})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-class TestLevelAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
+class TestLevelAPI(mixins.TestCreateMixin, mixins.TestUpdateMixin, mixins.TestDeleteMixin,
                     mixins.TestFilterMixin, mixins.TestSetupMixin, APITestCase):
     """
     Level Model Tests for Create, Destroy, Filter, Move
@@ -70,6 +70,9 @@ class TestLevelAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
 
     basename = 'level'
     filter_fields = ['league']
+    valid_update = {
+        'title': "updated_title"
+    }
 
     def create_object(self):
         return baker.make('leagues.Level')
