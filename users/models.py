@@ -48,6 +48,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
+    class Meta:
+        ordering = ['-pk']
+
     def get_full_name(self):
         return ' '.join([self.first_name, self.last_name])
 
@@ -83,3 +86,6 @@ class UserLeagueStatus(models.Model):
     max_casts = models.IntegerField(default=0)
     max_backups = models.IntegerField(default=0)
     visibilities = models.ManyToManyField(Role, blank=True)
+
+    class Meta:
+        ordering = ['-pk']

@@ -53,7 +53,7 @@ class League(models.Model):
     opponent_library = JSONField(default=dict, blank=True)
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['-pk']
 
     def __str__(self):
         return self.title
