@@ -11,7 +11,7 @@ from .serializers.userleaguestatus import (
 
 from .permissions import (
     IsLeagueMember, IsUserOwner,
-    IsUserLeagueStatusManager, IsUserLeagueStatusOwner
+    IsUserLeagueStatusManager, IsUserLeagueStatusOwner, UserLeagueStatusFilterPermission
 )
 
 from rest_framework import viewsets, mixins, permissions, status
@@ -68,8 +68,8 @@ class UserViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.Ret
     permission_classes = (IsSuperUser | ActionBasedPermission,)
     action_permissions = {
         permissions.AllowAny: ['create'],
-        IsLeagueMember: ['list'],
-        IsUserOwner: ['update', 'partial_update', 'retrieve'],
+        permissions.IsAuthenticated & IsLeagueMember: ['list'],
+        permissions.IsAuthenticated & IsUserOwner: ['update', 'partial_update', 'retrieve'],
     }
 
     def get_object(self):  # custom get object for /me endpoint
@@ -103,8 +103,10 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     * Permissions: IsUserLeagueStatusOwner or IsUserLeagueStatusManager
 
     list: List UserLeagueStatus \n
-    * Permissions: IsAuthenticated (only user pk is provided, no private info)
-    * Query Params: User, League
+    * Permissions: UserLeagueStatusFilterPermission
+        * Umpires must filter by current user. League or no league is optional.
+        * Managers can both apply to leagues and manage leagues. Permissions filtered accordingly
+    * Query Params: User, League, Request_status
 
     apply_level: Apply a Level to UserLeagueStatus \n
     * Permissions: Owner of Applied Level
@@ -121,9 +123,10 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         'partial_update': UserLeagueStatusUpdateSerializer
     }
 
-    permission_classes = (IsSuperUser | ActionBasedPermission,)
+    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
-        permissions.IsAuthenticated: ['create', 'list'],  # user restriction enforced on serializer level
+        permissions.IsAuthenticated: ['create'],  # user restriction enforced on serializer level
+        UserLeagueStatusFilterPermission: ['list'],
         IsUserLeagueStatusOwner | IsUserLeagueStatusManager: ['retrieve', 'destroy'],
         IsUserLeagueStatusManager: ['apply_level', 'update', 'partial_update'],
     }
