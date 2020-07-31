@@ -52,13 +52,17 @@ class League(models.Model):
     api_key = models.CharField(default="", max_length=128)
     opponent_library = JSONField(default=dict, blank=True)
 
+    class Meta:
+        ordering = ['-id']
+
     def __str__(self):
         return self.title
 
 
-class Division(models.Model):
+class Division(OrderedModel):
     title = models.CharField(max_length=32)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
+    order_with_respect_to = 'league'
 
     # team snap fields
     ts_id = models.IntegerField(default=0)
@@ -67,9 +71,10 @@ class Division(models.Model):
         return self.title
 
 
-class Role(models.Model):
+class Role(OrderedModel):
     title = models.CharField(max_length=32)
     division = models.ForeignKey(Division, on_delete=models.CASCADE)
+    order_with_respect_to = 'division'
 
     def __str__(self):
         return ' '.join([self.division.title, self.title])
