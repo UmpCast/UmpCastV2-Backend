@@ -12,6 +12,9 @@ class Game(models.Model):
     # ts
     ts_id = models.IntegerField(default=0)
 
+    class Meta:
+        ordering = ['-pk']
+
 
 class Post(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
