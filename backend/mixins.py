@@ -28,7 +28,7 @@ class MoveOrderedModelMixin(object):
         if order is None:
             return Response({"error": "missing parameters"}, status=status.HTTP_400_BAD_REQUEST)
         if order < obj_set.get_min_order() or order > obj_set.get_max_order():
-            return Response({"order": "order value out of range"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"order": ["order value out of range"]}, status=status.HTTP_400_BAD_REQUEST)
         obj.to(order)
         return Response(status=status.HTTP_200_OK)
 
