@@ -44,6 +44,12 @@ class LevelViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.Crea
     * Extra Validations:
         * Must be owner of league and roles the level is linked to
 
+    update: Update Level \n
+    * Permissions: IsLevelOwner
+
+    partial_update: Partial Update Level \n
+    * Permissions: IsLevelOwner
+
     destroy: Destroy Level \n
     * Permissions: IsLevelOwner
 

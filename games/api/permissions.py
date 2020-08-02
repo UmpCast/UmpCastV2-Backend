@@ -29,7 +29,7 @@ class IsGameLeague(permissions.BasePermission):
 class GameFilterPermissions(permissions.BasePermission):
     """
     FilterPermissions for Game List View.
-    Can only filter league/division if manager of respective league, cannot list all games
+    Can only filter league/division if accepted to respective league, cannot list all games
     """
     def has_permission(self, request, view):
         division_pk = request.query_params.get('division', None)
