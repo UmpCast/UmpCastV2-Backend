@@ -39,7 +39,7 @@ class TestLeagueAPI(mixins.TestModelMixin, APITestCase):
 class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
                         mixins.TestSetupMixin, APITestCase):
     """
-    Division Model Tests for Create, Destroy
+    Division Model Tests for Create, Destroy, Move
     """
 
     basename = 'division'
@@ -101,7 +101,7 @@ class TestLevelAPI(mixins.TestCreateMixin, mixins.TestUpdateMixin, mixins.TestDe
 class TestRoleAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
                     mixins.TestSetupMixin, APITestCase):
     """
-    Role Model Tests for Create, Destroy
+    Role Model Tests for Create, Destroy, Move
     """
 
     basename = 'role'
