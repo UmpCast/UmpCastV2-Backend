@@ -57,6 +57,7 @@ INSTALLED_APPS = [
 
     'users',
     'leagues',
+    'games',
 ]
 
 MIDDLEWARE = [
@@ -100,11 +101,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
-        'PORT': 5432
+        'NAME': 'api_db'
     }
 }
 
@@ -174,7 +171,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'backend.pagination.CustomPagination',
+    'PAGE_SIZE': 10
 }
 
 AUTHENTICATION_BACKENDS = (

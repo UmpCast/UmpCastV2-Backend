@@ -1,32 +1,19 @@
 from rest_framework import serializers
-from ..models import User, UserLeagueStatus
 from rest_framework.serializers import ValidationError
-from leagues.api.serializers import LeaguePublicSerializer
+from users.models import User
 import django.contrib.auth.password_validation as validators
-from leagues.models import League
 import re
 
-from django.contrib.auth import get_user_model
-User = get_user_model()
 
-
-class UserProfilePublicSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
-        read_only_fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
-
-
-class UserProfilePrivateSerializer(serializers.ModelSerializer):
+class UserProfilePrivateBaseSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(max_length=128, write_only=True)
 
     class Meta:
         model = User
         fields = ('pk', 'account_type', 'leagues', 'email', 'email_notifications',
-                  'first_name', 'last_name', 'is_configured',
-                  'phone_number', 'phone_notifications', 'profile_picture',
+                  'first_name', 'last_name', 'phone_number', 'phone_notifications', 'profile_picture',
                   'date_joined', 'password', 'password2')
-        read_only_fields = ('pk',)
+        read_only_fields = ('pk', 'leagues')
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -48,6 +35,17 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
             raise ValidationError('phone numbers can only contain numeric values')
         return phone_number
 
+
+class UserProfilePublicSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
+        read_only_fields = ('pk', 'first_name', 'last_name', 'profile_picture', 'date_joined', 'account_type')
+
+
+class UserProfilePrivateCreateSerializer(UserProfilePrivateBaseSerializer):
+
     def create(self, validated_data):
         first = validated_data.pop('first_name', None)
         last = validated_data.pop('last_name', None)
@@ -59,26 +57,17 @@ class UserProfilePrivateSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(email, first, last, password)
         return self.update(user, validated_data)
 
+
+class UserProfilePrivateRetrieveSerializer(UserProfilePrivateBaseSerializer):
+    pass
+
+
+class UserProfilePrivateUpdateSerializer(UserProfilePrivateBaseSerializer):
+
     def update(self, instance, validated_data):
         if 'password' in validated_data:
+            if 'password2' not in validated_data:  # password2 must be passed in, validation in validate_password2
+                raise ValidationError("must provide password2 when updating password")
             instance.set_password(validated_data.pop('password'))
         instance.save()
         return super().update(instance, validated_data)
-
-class UserLeagueStatusSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = UserLeagueStatus
-        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined', 'join_status', 'max_casts')
-        read_only_fields = ('pk', 'date_pending')
-        create_only_fields = ('user', 'league')
-
-    def update(self, instance, validated_data):  # remove create_only_fields from dictionary
-        for field in UserLeagueStatusSerializer.Meta.create_only_fields:
-            validated_data.pop(field, None)
-        return super().update(instance, validated_data)
-
-    def validate_user(self, user):
-        if user != self.context['request'].user:
-            raise ValidationError("Can only create UserLeagueStatus using current user")
-        return user

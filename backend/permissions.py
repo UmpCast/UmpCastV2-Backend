@@ -17,3 +17,11 @@ class IsSuperUser(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         return request.user.is_superuser
+
+
+class IsManager(permissions.BasePermission):
+    """
+    Check to see if a user is a manager
+    """
+    def has_permission(self, request, view):
+        return request.user.is_manager()

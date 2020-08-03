@@ -39,7 +39,7 @@ class TestLeagueAPI(mixins.TestModelMixin, APITestCase):
 class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
                         mixins.TestSetupMixin, APITestCase):
     """
-    Division Model Tests for Create, Destroy
+    Division Model Tests for Create, Destroy, Move
     """
 
     basename = 'division'
@@ -49,13 +49,20 @@ class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
 
     def get_valid_create(self):
         league = baker.make('leagues.League')
-        self.user.leagues.add(league)
+        self.user.leagues.add(league, through_defaults = {'request_status': 'accepted'})
         return {
             'title': 'test division 1',
             'league': league.pk
         }
 
-class TestLevelAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
+    def test_move(self):
+        division_1 = baker.make('leagues.Division', order=0)
+        division_2 = baker.make('leagues.Division', league=division_1.league, order=1)
+        move_url = reverse('division-move', kwargs={'pk': division_1.pk})
+        response = self.client.patch(move_url, data = {"order": 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+class TestLevelAPI(mixins.TestCreateMixin, mixins.TestUpdateMixin, mixins.TestDeleteMixin,
                     mixins.TestFilterMixin, mixins.TestSetupMixin, APITestCase):
     """
     Level Model Tests for Create, Destroy, Filter, Move
@@ -63,16 +70,19 @@ class TestLevelAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
 
     basename = 'level'
     filter_fields = ['league']
+    valid_update = {
+        'title': "updated_title"
+    }
 
     def create_object(self):
         return baker.make('leagues.Level')
 
     def get_valid_create(self):
         role = baker.make('leagues.Role')
-        self.user.leagues.add(role.division.league)
+        self.user.leagues.add(role.division.league, through_defaults = {'request_status': 'accepted'})
         return {
             'league': role.division.league.pk,
-            'roles': [role.pk]
+            'visibilities': [role.pk]
         }
 
     def get_filter_queries(self):
@@ -80,18 +90,18 @@ class TestLevelAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
             'league': [str(league.pk) for league in League.objects.all()]
         }
 
-    def test_move_level(self):
+    def test_move(self):
         level_1 = baker.make('leagues.Level', order=0)
         level_2 = baker.make('leagues.Level', league=level_1.league, order=1)
-        move_level = reverse('level-move-level', kwargs={'pk': level_1.pk})
-        response = self.client.patch(move_level, data = {"order": 1})
+        move_url = reverse('level-move', kwargs={'pk': level_1.pk})
+        response = self.client.patch(move_url, data = {"order": 1})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestRoleAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
                     mixins.TestSetupMixin, APITestCase):
     """
-    Role Model Tests for Create, Destroy
+    Role Model Tests for Create, Destroy, Move
     """
 
     basename = 'role'
@@ -101,8 +111,15 @@ class TestRoleAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
 
     def get_valid_create(self):
         division = baker.make('leagues.Division')
-        self.user.leagues.add(division.league)
+        self.user.leagues.add(division.league, through_defaults = {'request_status': 'accepted'})
         return {
             'title': 'test role 1',
             'division': division.pk
         }
+
+    def test_move(self):
+        role_1 = baker.make('leagues.Role', order=0)
+        role_2 = baker.make('leagues.Role', division=role_1.division, order=1)
+        move_url = reverse('role-move', kwargs={'pk': role_1.pk})
+        response = self.client.patch(move_url, data = {"order": 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

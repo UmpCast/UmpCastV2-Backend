@@ -24,14 +24,13 @@ class UserModelManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User Model"""
-    leagues = models.ManyToManyField(League, blank=True)
+    leagues = models.ManyToManyField(League, blank=True, through='UserLeagueStatus')
     email = models.EmailField(max_length=64, unique=True)
     email_notifications = models.BooleanField(default=True)
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=32)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    is_configured = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=10, blank=True)
     phone_notifications = models.BooleanField(default=True)
     profile_picture = models.ImageField(upload_to='profile_pics/%Y/%m/', null=True, blank=True)
@@ -49,9 +48,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
-    def configure_user(self):
-        self.is_configured = True
-        self.save()
+    class Meta:
+        ordering = ['-pk']
 
     def get_full_name(self):
         return ' '.join([self.first_name, self.last_name])
@@ -76,26 +74,18 @@ class UserLeagueStatus(models.Model):
     date_pending = models.DateTimeField(default=now)
     date_joined = models.DateTimeField(default=now)
 
-    JOIN_STATUS_CHOICES = (
-        ('pending', 'pending'),
+    REQUEST_STATUS_CHOICES = (
         ('accepted', 'accepted'),
+        ('pending', 'pending'),
+        ('rejected', 'rejected'),
     )
 
-    join_status = models.CharField(max_length=10, choices=JOIN_STATUS_CHOICES, default="pending")
+    request_status = models.CharField(max_length=10, choices=REQUEST_STATUS_CHOICES, default='pending')
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)
-    visibilities = models.ManyToManyField(Role)
+    max_backups = models.IntegerField(default=0)
+    visibilities = models.ManyToManyField(Role, blank=True)
 
-    def accept_user(self):
-        self.join_status = 'accepted'
-        self.date_joined = now
-        self.save()
-
-    def remove_user(self):
-        self.join_status = 'pending'
-        self.save()
-
-    def set_max_casts(self, max_casts):
-        self.max_casts = max_casts
-        self.save()
+    class Meta:
+        ordering = ['-pk']

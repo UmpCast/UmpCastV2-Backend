@@ -2,6 +2,35 @@ from rest_framework import status
 from django.urls import reverse
 from rest_framework.test import APIClient
 from model_bakery import baker
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+
+class MoveOrderedModelMixin(object):
+
+    @action(detail=True, methods=['patch'])
+    def move(self, request, pk):
+        assert hasattr(self, 'move_filter_variable'), (
+            'move_filter_variable required'
+        )
+        assert hasattr(self, 'move_filter_value'), (
+            'move_filter_value required'
+        )
+
+        obj = self.get_object()
+        filter_dict = {
+            self.move_filter_variable: getattr(obj, self.move_filter_value)
+        }
+
+        obj_set = self.get_queryset().filter(**filter_dict)
+        order = int(request.data.get('order', None))
+
+        if order is None:
+            return Response({"error": "missing parameters"}, status=status.HTTP_400_BAD_REQUEST)
+        if order < obj_set.get_min_order() or order > obj_set.get_max_order():
+            return Response({"order": ["order value out of range"]}, status=status.HTTP_400_BAD_REQUEST)
+        obj.to(order)
+        return Response(status=status.HTTP_200_OK)
 
 
 class ObjectMixin(object):
