@@ -36,7 +36,7 @@ class TestLeagueAPI(mixins.TestModelMixin, APITestCase):
         }
 
 
-class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
+class TestDivisionAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin, mixins.TestDeleteMixin,
                         mixins.TestSetupMixin, APITestCase):
     """
     Division Model Tests for Create, Destroy, Move
