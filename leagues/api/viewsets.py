@@ -124,7 +124,8 @@ class RoleViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
 
 
 class DivisionViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
-                        mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+                        mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Provide Create/Destroy functionality for Divisions
 
@@ -153,7 +154,8 @@ class DivisionViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
-        IsDivisionOwner: ['move', 'destroy']
+        IsManager & IsDivisionOwner: ['move', 'destroy'],
+        IsDivisionOwner: ['retrieve']
     }
 
     # move orders

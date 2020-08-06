@@ -42,7 +42,7 @@ class IsDivisionOwner(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         division = Division.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and division.league in request.user.leagues.accepted()
+        return division.league in request.user.leagues.accepted()
 
 
 class IsUmpireOwner(permissions.BasePermission):
