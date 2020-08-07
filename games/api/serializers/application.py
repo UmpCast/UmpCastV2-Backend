@@ -32,6 +32,8 @@ class ApplicationCreateSerializer(ApplicationBaseSerializer):
             raise ValidationError(' '.join(['cannot apply', str(adv_scheduling), 'days before game']))
         if post.game.division.league not in user.leagues.accepted():
             raise ValidationError("cannot add this user to this post due to league restrictions")
+        if not UserLeagueStatus.objects.filter(user=user, league=post.role.division.league).exists():
+            raise ValidationError("this error should not occur: user not in relevant league to apply for this game")
         if not user.is_manager() and post.role not in UserLeagueStatus.objects.get(user=user, league=post.role.division.league).visibilities.all():
             raise ValidationError("this error should not occur: user does not have visibility to apply for this post")
         if Application.objects.filter(post=post, user=user).exists():  # user can only create
