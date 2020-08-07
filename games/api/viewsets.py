@@ -12,7 +12,7 @@ from .serializers.post import (
 
 from .permissions import (
     IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions,
-    ListByDivisionPermission
+    ListByDivisionPermission, ApplicationFilterPermission
 )
 
 from backend.permissions import (
@@ -34,8 +34,8 @@ from rest_framework.decorators import action
 from .filters import GameFilter
 
 
-class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin,
-                            mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
+                            mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Destroy, Move functionality for ordered Application
 
@@ -44,6 +44,11 @@ class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin,
 
     destroy: Destroy Application \n
     * Permissions: IsManager (of league application is assigned to)
+
+    list: List/Filter Application \n
+    * Permissions: ApplicationFilterPermission
+        * User Filter-Param is required
+        * User must be same as request user
 
     move: Move Application Order \n
     * Permissions: IsManager (of league application is assigned to)
@@ -59,7 +64,9 @@ class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin,
     action_permissions = {
         IsManager: ["create"], # manager of league requirement enforced on serializer level
         IsManager & IsApplicationLeague: ["destroy", "move"],
+        ApplicationFilterPermission: ["list"]
     }
+    filter_fields = ('user',)
 
     # move orders
     move_filter_variable = 'post'
