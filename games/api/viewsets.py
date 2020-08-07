@@ -11,7 +11,8 @@ from .serializers.post import (
 )
 
 from .permissions import (
-    IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions
+    IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions,
+    ListByDivisionPermission
 )
 
 from backend.permissions import (
@@ -29,8 +30,8 @@ from backend.mixins import (
 
 from rest_framework import viewsets, permissions, mixins, status
 from ..models import Application, Post, Game
-import django_filters
 from rest_framework.decorators import action
+from .filters import GameFilter
 
 
 class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin,
@@ -102,10 +103,17 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
     * Permission: IsManager & IsGameLeague (is a manger and in the league of the game)
 
     list: List Games \n
-    * Permission: GameFilterPermission (Can only filter league/division if accepted to respective league, cannot list all games)
+    * Permission: GameFilterPermission (Can only filter division if accepted to respective league, cannot list all games)
     * Query Params:
-        * Division
-        * League
+        * Division (required)
+        * Date_time_before (iso format)
+        * Date_time_after (iso format)
+
+    list_by_division: List By Divisions \n
+    * Permission: Request User must be in the league of each division requested
+    * Extra Notes:
+        * Divisions passed in list over division pk's. Any game in any division is added
+        * Result follows pagination rules
     """
     serializer_class = GameSerializer
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
@@ -113,15 +121,19 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
         IsManager: ["create"],  # manager of league requirement enforced on serializer level
         IsGameLeague: ["retrieve"],
         IsManager & IsGameLeague: ["destroy"],
-        GameFilterPermissions: ["list"]
+        GameFilterPermissions: ["list"],
+        ListByDivisionPermission: ["list_by_division"]
     }
 
-    def get_queryset(self):
-        queryset = Game.objects.all()
-        division_pk = self.request.query_params.get('division', None)
-        league_pk = self.request.query_params.get('league', None)
-        if division_pk is not None:
-            queryset = queryset.filter(division__pk=division_pk)
-        if league_pk is not None:
-            queryset = queryset.filter(division__league__pk=league_pk)
-        return queryset
+    queryset = Game.objects.all()
+    filterset_class = GameFilter
+
+    @action(detail=False, methods=['post'])
+    def list_by_division(self, request):
+        division_list = request.data.get('divisions', None)
+        qs = Game.objects.none()
+        for division in division_list:
+            qs = qs | Game.objects.filter(division__pk=division)
+        page = self.paginate_queryset(qs)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
