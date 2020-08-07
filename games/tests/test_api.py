@@ -7,12 +7,13 @@ from rest_framework import status
 from django.utils import timezone
 
 class TestApplicationAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
-                            mixins.TestSetupMixin, APITestCase):
+                            mixins.TestSetupMixin, mixins.TestListMixin, APITestCase):
     """
     Test Application Models for Create, Destroy, Move
     """
 
     basename = 'application'
+    filter_fields = ['user']
 
     def create_object(self):
         return baker.make('games.Application')
@@ -23,6 +24,12 @@ class TestApplicationAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
         return {
             'post': post.pk,
             'user': self.user.pk
+        }
+
+    def get_filter_queries(self):
+        applications = baker.make('games.Application', user=self.user, _quantity=10)
+        return {
+            'user': [self.user.pk]
         }
 
     def test_move(self):
