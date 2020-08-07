@@ -2,6 +2,7 @@ from rest_framework import serializers
 from games.models import Application
 from rest_framework.serializers import ValidationError
 from users.api.serializers.user import UserProfilePublicSerializer
+from users.models import User
 
 
 class ApplicationBaseSerializer(serializers.ModelSerializer):
@@ -32,6 +33,11 @@ class ApplicationCreateSerializer(ApplicationBaseSerializer):
         if Application.objects.filter(post__game=post.game, user=user).exists():
             raise ValidationError("already applied to this game!")
         return super().validate(validated_data)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['user'] = UserProfilePublicSerializer(User.objects.get(pk=ret['user'])).data
+        return ret
 
 
 class ApplicationRetrieveSerializer(ApplicationBaseSerializer):
