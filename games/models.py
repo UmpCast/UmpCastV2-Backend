@@ -1,6 +1,7 @@
 from django.db import models
 from ordered_model.models import OrderedModel
 
+
 class Game(models.Model):
     division = models.ForeignKey('leagues.Division', on_delete=models.CASCADE)
     title = models.CharField(max_length=32)
