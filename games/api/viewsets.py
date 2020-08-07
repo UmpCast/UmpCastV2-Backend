@@ -1,5 +1,5 @@
 from .serializers.application import (
-    ApplicationSerializer
+    ApplicationCreateSerializer, ApplicationRetrieveSerializer
 )
 
 from .serializers.game import (
@@ -32,9 +32,10 @@ from rest_framework import viewsets, permissions, mixins, status
 from ..models import Application, Post, Game
 from rest_framework.decorators import action
 from .filters import GameFilter
+from drf_multiple_serializer import ActionBaseSerializerMixin
 
 
-class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
+class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
                             mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Destroy, Move functionality for ordered Application
@@ -59,7 +60,10 @@ class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin, mixins.
         * order of desired location (only parameter) passed in json body, all other applications will automatically reorder
     """
     queryset = Application.objects.all()
-    serializer_class = ApplicationSerializer
+    serializer_classes = {
+        'default': ApplicationRetrieveSerializer,
+        'create': ApplicationCreateSerializer
+    }
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
         IsManager: ["create"], # manager of league requirement enforced on serializer level
