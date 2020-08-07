@@ -35,4 +35,4 @@ class ApplicationCreateSerializer(ApplicationBaseSerializer):
 
 
 class ApplicationRetrieveSerializer(ApplicationBaseSerializer):
-    user = UserProfilePublicSerializer(many=True, read_only=True)
+    user = UserProfilePublicSerializer(many=False, read_only=True)
