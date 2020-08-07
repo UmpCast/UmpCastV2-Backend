@@ -2,7 +2,8 @@ from rest_framework import serializers
 from games.models import Application
 from rest_framework.serializers import ValidationError
 from users.api.serializers.user import UserProfilePublicSerializer
-from users.models import User
+from users.models import User, UserLeagueStatus
+from django.utils import timezone
 
 
 class ApplicationBaseSerializer(serializers.ModelSerializer):
@@ -26,8 +27,13 @@ class ApplicationCreateSerializer(ApplicationBaseSerializer):
     def validate(self, validated_data):
         post = validated_data.get('post', None)
         user = validated_data.get('user', None)
+        adv_scheduling = post.game.division.league.adv_scheduling_limit
+        if (post.game.date_time - timezone.now()).days > adv_scheduling:
+            raise ValidationError(' '.join(['cannot apply', str(adv_scheduling), 'days before game']))
         if post.game.division.league not in user.leagues.accepted():
             raise ValidationError("cannot add this user to this post due to league restrictions")
+        if not user.is_manager() and post.role not in UserLeagueStatus.objects.get(user=user, league=post.role.division.league).visibilities.all():
+            raise ValidationError("this error should not occur: user does not have visibility to apply for this post")
         if Application.objects.filter(post=post, user=user).exists():  # user can only create
             raise ValidationError("already applied to this post!")
         if Application.objects.filter(post__game=post.game, user=user).exists():

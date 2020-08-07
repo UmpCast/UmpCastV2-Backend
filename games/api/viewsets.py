@@ -33,6 +33,8 @@ from ..models import Application, Post, Game
 from rest_framework.decorators import action
 from .filters import GameFilter
 from drf_multiple_serializer import ActionBaseSerializerMixin
+from django.utils import timezone
+from rest_framework.response import Response
 
 
 class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
@@ -42,9 +44,17 @@ class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixin
 
     create: Create Application \n
     * Permissions: IsManager (of league application is assigned to)
+    * Extra Notes:
+        * Checks if user is creating for himself or manager is creating for user in league
+        * Check if user already applied to post
+        * Check if user already applied to game
+        * Check if user even has visibility to apply for game
+        * Check if game applied to is more than league advanced scheduling limit
 
     destroy: Destroy Application \n
     * Permissions: IsManager (of league application is assigned to)
+    * Extra Notes:
+        * Check if umpire: cannot canel within cancellation period
 
     list: List/Filter Application \n
     * Permissions: ApplicationFilterPermission
@@ -66,8 +76,9 @@ class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixin
     }
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
-        IsManager: ["create"], # manager of league requirement enforced on serializer level
-        IsManager & IsApplicationLeague: ["destroy", "move"],
+        permissions.IsAuthenticated: ["create"],  # create validation logic enforced on serializer
+        IsApplicationLeague: ["destroy"],  # additional validation in destroy method
+        IsManager & IsApplicationLeague: ["move"],
         ApplicationFilterPermission: ["list"]
     }
     filter_fields = ('user',)
@@ -75,6 +86,15 @@ class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixin
     # move orders
     move_filter_variable = 'post'
     move_filter_value = 'post'
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        cancellation_period = instance.post.game.division.league.cancellation_period
+        if (instance.post.game.date_time - timezone.now()).days < cancellation_period:
+            if not request.user.is_manager():
+                return Response({"error": ' '.join(['cannot cancel within', str(cancellation_period), 'days'])}, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PostViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
