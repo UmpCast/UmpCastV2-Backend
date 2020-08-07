@@ -13,7 +13,7 @@ class Game(models.Model):
     ts_id = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['-pk']
+        ordering = ['-date_time']
 
 
 class Post(models.Model):
