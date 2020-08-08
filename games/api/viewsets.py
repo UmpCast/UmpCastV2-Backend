@@ -11,8 +11,7 @@ from .serializers.post import (
 )
 
 from .permissions import (
-    IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions,
-    ListByDivisionPermission, ApplicationFilterPermission
+    IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions, ApplicationFilterPermission
 )
 
 from backend.permissions import (
@@ -134,17 +133,12 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
     * Permission: IsManager & IsGameLeague (is a manger and in the league of the game)
 
     list: List Games \n
-    * Permission: GameFilterPermission (Can only filter division if accepted to respective league, cannot list all games)
+    * Permission: GameFilterPermission (Can only filter division/division__in if accepted to all respective leagues, cannot list all games)
     * Query Params:
-        * Division (required)
+        * Division (either Division or Division__in is required)
+        * Division__in (list of division pk's, queried using OR)
         * Date_time_before (iso format)
         * Date_time_after (iso format)
-
-    list_by_division: List By Divisions \n
-    * Permission: Request User must be in the league of each division requested
-    * Extra Notes:
-        * Divisions passed in list over division pk's. Any game in any division is added
-        * Result follows pagination rules
     """
     serializer_class = GameSerializer
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
@@ -153,18 +147,7 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
         IsGameLeague: ["retrieve"],
         IsManager & IsGameLeague: ["destroy"],
         GameFilterPermissions: ["list"],
-        ListByDivisionPermission: ["list_by_division"]
     }
 
     queryset = Game.objects.all()
     filterset_class = GameFilter
-
-    @action(detail=False, methods=['post'])
-    def list_by_division(self, request):
-        division_list = request.data.get('divisions', None)
-        qs = Game.objects.none()
-        for division in division_list:
-            qs = qs | Game.objects.filter(division__pk=division)
-        page = self.paginate_queryset(qs)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)

@@ -45,19 +45,14 @@ class GameFilterPermissions(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         division_pk = request.query_params.get('division', None)
-        if division_pk is None:
+        division__in = request.query_params.get('division__in', None)
+
+        if division_pk is None and division__in is None:
             return False
-        return Division.objects.get(pk=division_pk).league in request.user.leagues.accepted()
-
-
-class ListByDivisionPermission(permissions.BasePermission):
-    """
-    ListByDivision Permission Rules
-    Can only filter by divisions in which the user is in the league for
-    """
-    def has_permission(self, request, view):
-        division_list = request.data.get('divisions', None)
-        for division in division_list:
-            if Division.objects.get(pk=division).league not in request.user.leagues.accepted():
-                return False
+        if division_pk is not None and Division.objects.get(pk=division_pk).league not in request.user.leagues.accepted():
+            return False
+        if division__in is not None:
+            for division in division__in.split(','):
+                if Division.objects.get(pk=division).league not in request.user.leagues.accepted():
+                    return False
         return True
