@@ -1,6 +1,7 @@
 from ..models import Application, Post, Game
 from rest_framework import permissions
 from leagues.models import Division, League
+from users.models import User
 
 class IsApplicationLeague(permissions.BasePermission):
     """
@@ -8,6 +9,17 @@ class IsApplicationLeague(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         return Application.objects.get(pk=view.kwargs['pk']).post.game.division.league in request.user.leagues.accepted()
+
+
+class ApplicationFilterPermission(permissions.BasePermission):
+    """
+    Applications must be filtered using user_pk. The user_pk must belong to the request user
+    """
+    def has_permission(self, request, view):
+        user_pk = request.query_params.get('user', None)
+        if user_pk is None:
+            return False
+        return User.objects.get(pk=user_pk) == request.user
 
 
 class IsPostLeague(permissions.BasePermission):
@@ -33,11 +45,14 @@ class GameFilterPermissions(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         division_pk = request.query_params.get('division', None)
-        league_pk = request.query_params.get('league', None)
-        if division_pk is None and league_pk is None:
+        division__in = request.query_params.get('division__in', None)
+
+        if division_pk is None and division__in is None:
             return False
         if division_pk is not None and Division.objects.get(pk=division_pk).league not in request.user.leagues.accepted():
             return False
-        if league_pk is not None and League.objects.get(pk=league_pk) not in request.user.leagues.accepted():
-            return False
+        if division__in is not None:
+            for division in division__in.split(','):
+                if Division.objects.get(pk=division).league not in request.user.leagues.accepted():
+                    return False
         return True

@@ -1,5 +1,5 @@
 from .serializers.application import (
-    ApplicationSerializer
+    ApplicationCreateSerializer, ApplicationRetrieveSerializer
 )
 
 from .serializers.game import (
@@ -11,7 +11,7 @@ from .serializers.post import (
 )
 
 from .permissions import (
-    IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions
+    IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions, ApplicationFilterPermission
 )
 
 from backend.permissions import (
@@ -29,20 +29,36 @@ from backend.mixins import (
 
 from rest_framework import viewsets, permissions, mixins, status
 from ..models import Application, Post, Game
-import django_filters
 from rest_framework.decorators import action
+from .filters import GameFilter
+from drf_multiple_serializer import ActionBaseSerializerMixin
+from django.utils import timezone
+from rest_framework.response import Response
 
 
-class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin,
-                            mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
+                            mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Destroy, Move functionality for ordered Application
 
     create: Create Application \n
     * Permissions: IsManager (of league application is assigned to)
+    * Extra Notes:
+        * Checks if user is creating for himself or manager is creating for user in league
+        * Check if user already applied to post
+        * Check if user already applied to game
+        * Check if user even has visibility to apply for game
+        * Check if game applied to is more than league advanced scheduling limit
 
     destroy: Destroy Application \n
     * Permissions: IsManager (of league application is assigned to)
+    * Extra Notes:
+        * Check if umpire: cannot canel within cancellation period
+
+    list: List/Filter Application \n
+    * Permissions: ApplicationFilterPermission
+        * User Filter-Param is required
+        * User must be same as request user
 
     move: Move Application Order \n
     * Permissions: IsManager (of league application is assigned to)
@@ -53,16 +69,31 @@ class ApplicationViewSet(MoveOrderedModelMixin, mixins.CreateModelMixin,
         * order of desired location (only parameter) passed in json body, all other applications will automatically reorder
     """
     queryset = Application.objects.all()
-    serializer_class = ApplicationSerializer
+    serializer_classes = {
+        'default': ApplicationRetrieveSerializer,
+        'create': ApplicationCreateSerializer
+    }
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
-        IsManager: ["create"], # manager of league requirement enforced on serializer level
-        IsManager & IsApplicationLeague: ["destroy", "move"],
+        permissions.IsAuthenticated: ["create"],  # create validation logic enforced on serializer
+        IsApplicationLeague: ["destroy"],  # additional validation in destroy method
+        IsManager & IsApplicationLeague: ["move"],
+        ApplicationFilterPermission: ["list"]
     }
+    filter_fields = ('user',)
 
     # move orders
     move_filter_variable = 'post'
     move_filter_value = 'post'
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        cancellation_period = instance.post.game.division.league.cancellation_period
+        if (instance.post.game.date_time - timezone.now()).days < cancellation_period:
+            if not request.user.is_manager():
+                return Response({"error": ' '.join(['cannot cancel within', str(cancellation_period), 'days'])}, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PostViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
@@ -102,10 +133,12 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
     * Permission: IsManager & IsGameLeague (is a manger and in the league of the game)
 
     list: List Games \n
-    * Permission: GameFilterPermission (Can only filter league/division if accepted to respective league, cannot list all games)
+    * Permission: GameFilterPermission (Can only filter division/division__in if accepted to all respective leagues, cannot list all games)
     * Query Params:
-        * Division
-        * League
+        * Division (either Division or Division__in is required)
+        * Division__in (list of division pk's, queried using OR)
+        * Date_time_before (iso format)
+        * Date_time_after (iso format)
     """
     serializer_class = GameSerializer
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
@@ -113,15 +146,8 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
         IsManager: ["create"],  # manager of league requirement enforced on serializer level
         IsGameLeague: ["retrieve"],
         IsManager & IsGameLeague: ["destroy"],
-        GameFilterPermissions: ["list"]
+        GameFilterPermissions: ["list"],
     }
 
-    def get_queryset(self):
-        queryset = Game.objects.all()
-        division_pk = self.request.query_params.get('division', None)
-        league_pk = self.request.query_params.get('league', None)
-        if division_pk is not None:
-            queryset = queryset.filter(division__pk=division_pk)
-        if league_pk is not None:
-            queryset = queryset.filter(division__league__pk=league_pk)
-        return queryset
+    queryset = Game.objects.all()
+    filterset_class = GameFilter

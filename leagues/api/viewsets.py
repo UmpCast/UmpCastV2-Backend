@@ -15,8 +15,8 @@ from .serializers.level import (
 )
 
 from .permissions import (
-    IsRoleOwner, IsDivisionOwner,
-    IsUmpireOwner, IsLeagueOwner, IsLevelOwner,
+    InRoleLeague, InDivisionLeague,
+    IsUmpireOwner, IsLeagueOwner, InLevelLeague,
     LevelListQueryRequired
 )
 
@@ -45,19 +45,19 @@ class LevelViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.Crea
         * Must be owner of league and roles the level is linked to
 
     update: Update Level \n
-    * Permissions: IsLevelOwner
+    * Permissions: IsManager & InLevelLeague
 
     partial_update: Partial Update Level \n
-    * Permissions: IsLevelOwner
+    * Permissions: IsManager & InLevelLeague
 
     destroy: Destroy Level \n
-    * Permissions: IsLevelOwner
+    * Permissions: IsManager & InLevelLeague
 
     list: List Level \n
     * Permissions: LevelListQueryRequired. The league filter field must be provided and the user must be in the league
 
     move: Change Level Ordering \n
-    * Permissions: IsLevelOwner
+    * Permissions: IsManager & InLevelLeague
     * Extra Validations:
         * "order" field is required
         * "order" value must be within valid range
@@ -76,7 +76,7 @@ class LevelViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.Crea
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
         IsManager: ['create'],  # league/roles validated on serializer level
-        IsLevelOwner: ['move', 'update', 'partial_update', 'destroy'],
+        IsManager & InLevelLeague: ['move', 'update', 'partial_update', 'destroy'],
         LevelListQueryRequired: ['list']
     }
 
@@ -96,10 +96,10 @@ class RoleViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
         * Must be owner of league the role is linked to
 
     destroy: Destroy Role \n
-    * Permissions: IsRoleOwner
+    * Permissions: IsManager & InRoleLeague
 
     move: Change Role Ordering \n
-    * Permissions: IsRoleOwner
+    * Permissions: IsManager & InRoleLeague
     * Extra Validations:
         * "order" field is required
         * "order" value must be within valid range
@@ -115,7 +115,7 @@ class RoleViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
-        IsRoleOwner: ['move', 'destroy']
+        IsManager & InRoleLeague: ['move', 'destroy']
     }
 
     # move orders
@@ -124,7 +124,8 @@ class RoleViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
 
 
 class DivisionViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
-                        mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+                        mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Provide Create/Destroy functionality for Divisions
 
@@ -133,11 +134,14 @@ class DivisionViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
     * Extra Validations:
         * Must be owner of league the division is linked to
 
+    retrieve: Retrieve Division \n
+    * Permissions: InDivisionLeague
+
     destroy: Destroy Division \n
-    * Permissions: IsDivisionOwner
+    * Permissions: IsManager & InDivisionLeague
 
     move: Change Division Ordering \n
-    * Permissions: IsDivisionOwner
+    * Permissions: IsManager & InDivisionLeague
     * Extra Validations:
         * "order" field is required
         * "order" value must be within valid range
@@ -153,7 +157,8 @@ class DivisionViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin,
     permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission), )
     action_permissions = {
         IsManager: ['create'],  # league validated on serializer level
-        IsDivisionOwner: ['move', 'destroy']
+        IsManager & InDivisionLeague: ['move', 'destroy'],
+        InDivisionLeague: ['retrieve']
     }
 
     # move orders

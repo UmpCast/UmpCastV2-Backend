@@ -3,13 +3,13 @@ from ..models import League, Division, Role, Level
 from users.models import User
 
 
-class IsLevelOwner(permissions.BasePermission):
+class InLevelLeague(permissions.BasePermission):
     """
-    Checks to see if a user is a manager that has access rights to a level in a given league
+    Checks to see if a user has access rights to a level in a given league
     """
     def has_permission(self, request, view):
         level = Level.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and level.league in request.user.leagues.accepted()
+        return level.league in request.user.leagues.accepted()
 
 
 class LevelListQueryRequired(permissions.BasePermission):
@@ -27,22 +27,22 @@ class LevelListQueryRequired(permissions.BasePermission):
             return False
 
 
-class IsRoleOwner(permissions.BasePermission):
+class InRoleLeague(permissions.BasePermission):
     """
-    Checks to see if a user is a manager with access rights to a given role
+    Checks to see if a user has access rights to a given role
     """
     def has_permission(self, request, view):
         role = Role.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and role.division.league in request.user.leagues.accepted()
+        return role.division.league in request.user.leagues.accepted()
 
 
-class IsDivisionOwner(permissions.BasePermission):
+class InDivisionLeague(permissions.BasePermission):
     """
-    Checks to see if a user is a manager with access rights to a given division
+    Checks to see if a user has access rights to a given division
     """
     def has_permission(self, request, view):
         division = Division.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and division.league in request.user.leagues.accepted()
+        return division.league in request.user.leagues.accepted()
 
 
 class IsUmpireOwner(permissions.BasePermission):

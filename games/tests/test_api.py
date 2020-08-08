@@ -7,12 +7,13 @@ from rest_framework import status
 from django.utils import timezone
 
 class TestApplicationAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
-                            mixins.TestSetupMixin, APITestCase):
+                            mixins.TestSetupMixin, mixins.TestListMixin, APITestCase):
     """
     Test Application Models for Create, Destroy, Move
     """
 
     basename = 'application'
+    filter_fields = ['user']
 
     def create_object(self):
         return baker.make('games.Application')
@@ -23,6 +24,12 @@ class TestApplicationAPI(mixins.TestCreateMixin, mixins.TestDeleteMixin,
         return {
             'post': post.pk,
             'user': self.user.pk
+        }
+
+    def get_filter_queries(self):
+        applications = baker.make('games.Application', user=self.user, _quantity=10)
+        return {
+            'user': [self.user.pk]
         }
 
     def test_move(self):
@@ -62,7 +69,7 @@ class TestGameAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin,
     """
 
     basename = 'game'
-    filter_fields = ['division', 'league']
+    filter_fields = ['division', 'date_time_before', 'date_time_after']
 
     def create_object(self):
         return baker.make('games.Game')
@@ -81,5 +88,13 @@ class TestGameAPI(mixins.TestCreateMixin, mixins.TestRetrieveMixin,
         baker.make('games.Game', _quantity=30)
         return {
             'division': [str(division.pk) for division in Division.objects.all()],
-            'league': [str(league.pk) for league in League.objects.all()]
+            'date_time_before': ['2020-07-31T02:29:28.982442Z'],
+            'date_time_after': ['2020-07-31T02:29:28.982442Z']
         }
+
+    def test_list_by_division(self):
+        divisions = baker.make('leagues.Division', _quantity=5)
+        division_list = [division.pk for division in divisions]
+        list_url = reverse('game-list-by-division')
+        response = self.client.post(list_url, data={'divisions': division_list})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

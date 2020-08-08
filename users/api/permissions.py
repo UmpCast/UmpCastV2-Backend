@@ -67,6 +67,7 @@ class UserLeagueStatusFilterPermission(permissions.BasePermission):
                 return False
             if User.objects.get(pk=user_pk) != request.user:
                 return False
+            return True
 
         if request.user.is_manager():
             if user_pk is not None and league_pk is None:  # can only happen if manager is applying to league
