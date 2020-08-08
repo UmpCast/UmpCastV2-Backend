@@ -24,8 +24,9 @@ class Post(models.Model):
 
 
 def create_posts_from_game(sender, instance, *args, **kwargs):
-    for role in instance.division.role_set.all():
-        Post.objects.create(game=instance, role=role)
+    if kwargs['created']:
+        for role in instance.division.role_set.all():
+            Post.objects.create(game=instance, role=role)
 
 post_save.connect(create_posts_from_game, sender=Game)
 
