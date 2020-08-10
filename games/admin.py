@@ -15,8 +15,10 @@ class GameAdmin(admin.ModelAdmin):
                 # True if something changed in model
                 if value != form.initial[key]:
                     update_fields.append(key)
-        obj.save(update_fields=update_fields)
-        
+            obj.save(update_fields=update_fields)
+        else:
+            obj.save()
+            
 
 class PostAdmin(admin.ModelAdmin):
     list_display = ('pk', 'game', 'role')
