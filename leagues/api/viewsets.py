@@ -190,6 +190,9 @@ class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     list: List League \n
     * Permissions: IsUmpireOwner (if using user query param)
     * Query Params: User
+
+    public: Retrieve Public League Info (get request) \n
+    * Permissions: IsAuthenticated
     """
 
     queryset = League.objects.all()
@@ -203,5 +206,12 @@ class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         IsManager: ['create'],
         IsUmpireOwner: ['list'],
         IsManager & InLeague: ['update', 'partial_update', 'destroy'],
-        InLeague: ['retrieve']
+        InLeague: ['retrieve'],
+        permissions.IsAuthenticated: ['public']
     }
+
+    @action(detail=True, methods=['get'])
+    def public(self, request, pk):  # get public league info
+        league = self.get_object()
+        serializer = LeaguePublicSerializer(league)
+        return Response(serializer.data)
