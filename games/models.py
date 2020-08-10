@@ -37,3 +37,4 @@ class Application(OrderedModelUpdateMixin, OrderedModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     comments = models.TextField(blank=True, max_length=1028, null=True)
+    order_with_respect_to = 'post'
