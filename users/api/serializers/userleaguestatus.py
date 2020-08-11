@@ -41,9 +41,23 @@ class UserLeagueStatusCreateSerializer(UserLeagueStatusBaseSerializer):
         )
 
 
-class UserLeagueStatusRetrieveSerializer(UserLeagueStatusBaseSerializer):
+class UserLeagueStatusRetrieveSerializer(serializers.ModelSerializer):
     user = UserProfilePublicSerializer(many=False, read_only=True)
     league = LeaguePublicSerializer(many=False, read_only=True)
+    division_visibilities = serializers.SerializerMethodField()
+
+    class Meta:  # have to redefine Meta since division_visibilities is a new field
+        model = UserLeagueStatus
+        fields = ('pk', 'user', 'league', 'date_pending', 'date_joined',
+                    'request_status', 'max_casts', 'max_backups', 'visibilities', 'division_visibilities')
+        read_only_fields = ('pk', 'date_pending')
+
+    def get_division_visibilities(self, instance):
+        division_visibilities = []
+        for visibility in instance.visibilities.all():
+            if not visibility.division.pk in division_visibilities:
+                division_visibilities.append(visibility.division.pk)
+        return division_visibilities
 
 
 class UserLeagueStatusUpdateSerializer(UserLeagueStatusBaseSerializer):
