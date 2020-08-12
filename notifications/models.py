@@ -9,7 +9,7 @@ class BaseNotification(models.Model):
     """
     Used to ensure that all notification types have the same structure
     """
-    notification_date_time = models.DateTimeField()
+    notification_date_time = models.DateTimeField(default=timezone.now)
     subject = models.CharField(max_length=64, null=True, blank=True)
     message = models.CharField(max_length=256)
 
@@ -93,13 +93,13 @@ def game_handle_update(instance, **kwargs):
                 message = ' '.join([instance.title, 'has been cancelled'])
             ))
 
-
+# API Create Endpoint, Admin Create/Update, TS Create/Update
 def game_notification_receiver(sender, instance, *args, **kwargs):
     if kwargs['created']:
         game_handle_creation(instance)
     else:
         game_handle_update(instance, **kwargs)  # update_fields (date_time, is_active, location, description)
-post_save.connect(game_notification_receiver, Game)
+post_save.connect(game_notification_receiver, sender=Game)
 
 
 def is_casted(application):
@@ -135,7 +135,7 @@ def application_notification_receiver(sender, instance, *args, **kwargs):
         else:
             notify_application(instance)
             casted = instance.get_ordering_queryset().below_instance(self).first()
-post_save.connect(application_notification_receiver, Application)
+post_save.connect(application_notification_receiver, sender=Application)
 
 
 def print_game_notification(sender, instance, *args, **kwargs):
