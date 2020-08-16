@@ -2,6 +2,7 @@ from users.api.viewsets import UserViewSet, UserLeagueStatusViewSet
 from leagues.api.viewsets import LeagueViewSet, RoleViewSet, DivisionViewSet, LevelViewSet
 from games.api.viewsets import GameViewSet, PostViewSet, ApplicationViewSet
 from notifications.api.viewsets import UmpCastNotificationViewSet, LeagueNotificationViewSet, GameNotificationViewSet, ApplicationNotificationViewSet
+from teamsnap.api.viewsets import TeamSnapNoteViewSet
 from rest_framework import routers
 
 router = routers.DefaultRouter()
@@ -18,6 +19,7 @@ router.register('ump-cast-notifications', UmpCastNotificationViewSet, basename='
 router.register('league-notifications', LeagueNotificationViewSet, basename='league-notification')
 router.register('game-notifications', GameNotificationViewSet, basename='game-notification')
 router.register('application-notifications', ApplicationNotificationViewSet, basename='application-notification')
+router.register('teamsnap-notes', TeamSnapNoteViewSet, basename='team')
 
 for url in router.urls:
     print(url)
