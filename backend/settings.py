@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'users',
     'leagues',
     'games',
-    'notifications'
+    'notifications',
+    'teamsnap'
 ]
 
 MIDDLEWARE = [
