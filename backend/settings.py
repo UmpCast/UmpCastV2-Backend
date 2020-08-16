@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'users',
     'leagues',
     'games',
+    'notifications'
 ]
 
 MIDDLEWARE = [

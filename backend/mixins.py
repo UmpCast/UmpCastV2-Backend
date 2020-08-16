@@ -6,6 +6,36 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 
+class OrderedModelUpdateMixin(object):
+    def to(self, order, extra_update=None):
+        """
+        Move object to a certain position, updating all affected objects to move accordingly up or down.
+        """
+        if not isinstance(order, int):
+            raise TypeError(
+                "Order value must be set using an 'int', not using a '{0}'.".format(
+                    type(order).__name__
+                )
+            )
+
+        order_field_name = self.order_field_name
+        if order is None or getattr(self, order_field_name) == order:
+            # object is already at desired position
+            return
+        qs = self.get_ordering_queryset()
+        extra_update = {} if extra_update is None else extra_update
+        if getattr(self, order_field_name) > order:
+            qs.below_instance(self).above(order, inclusive=True).increase_order(
+                **extra_update
+            )
+        else:
+            qs.above_instance(self).below(order, inclusive=True).decrease_order(
+                **extra_update
+            )
+        setattr(self, order_field_name, order)
+        self.save(update_fields=['order'])
+
+
 class MoveOrderedModelMixin(object):
 
     @action(detail=True, methods=['patch'])

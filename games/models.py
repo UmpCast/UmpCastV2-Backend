@@ -1,6 +1,8 @@
 from django.db import models
 from ordered_model.models import OrderedModel
 from django.db.models.signals import post_save
+from backend.mixins import OrderedModelUpdateMixin
+
 
 class Game(models.Model):
     division = models.ForeignKey('leagues.Division', on_delete=models.CASCADE)
@@ -31,7 +33,8 @@ def create_posts_from_game(sender, instance, *args, **kwargs):
 post_save.connect(create_posts_from_game, sender=Game)
 
 
-class Application(OrderedModel):
+class Application(OrderedModelUpdateMixin, OrderedModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     comments = models.TextField(blank=True, max_length=1028, null=True)
+    order_with_respect_to = 'post'

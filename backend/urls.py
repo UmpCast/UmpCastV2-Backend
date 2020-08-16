@@ -24,6 +24,8 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from notifications.api import views
+
 schema_view = get_schema_view(
    openapi.Info(
       title="UmpCast API",
@@ -36,6 +38,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/notifications/<int:pk>/', views.NotificationListView.as_view(), name='notification-list'),
     path('api/auth/', include('rest_framework_social_oauth2.urls')),
     path('api/', include(router.urls)),
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')

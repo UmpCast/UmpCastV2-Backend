@@ -16,7 +16,7 @@ from .serializers.level import (
 
 from .permissions import (
     InRoleLeague, InDivisionLeague,
-    IsUmpireOwner, IsLeagueOwner, InLevelLeague,
+    IsUmpireOwner, InLeague, InLevelLeague,
     LevelListQueryRequired
 )
 
@@ -176,20 +176,23 @@ class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         * Manager automatically added to created league
 
     retrieve: Retrieve League \n
-    * Permissions: IsLeagueOwner
+    * Permissions: InLeague
 
     update: Full Update League \n
-    * Permissions: IsLeagueOwner
+    * Permissions: IsManager & InLeague
 
     partial_update: Partial Update League \n
-    * Permissions: IsLeagueOwner
+    * Permissions: IsManager & InLeague
 
     destroy: Destroy League \n
-    * Permissions: IsLeagueOwner
+    * Permissions: IsManager & InLeague
 
     list: List League \n
     * Permissions: IsUmpireOwner (if using user query param)
     * Query Params: User
+
+    public: Retrieve Public League Info (get request) \n
+    * Permissions: IsAuthenticated
     """
 
     queryset = League.objects.all()
@@ -202,5 +205,13 @@ class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     action_permissions = {
         IsManager: ['create'],
         IsUmpireOwner: ['list'],
-        IsLeagueOwner: ['update', 'partial_update', 'retrieve', 'destroy']
+        IsManager & InLeague: ['update', 'partial_update', 'destroy'],
+        InLeague: ['retrieve'],
+        permissions.IsAuthenticated: ['public']
     }
+
+    @action(detail=True, methods=['get'])
+    def public(self, request, pk):  # get public league info
+        league = self.get_object()
+        serializer = LeaguePublicSerializer(league)
+        return Response(serializer.data)

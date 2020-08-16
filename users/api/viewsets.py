@@ -14,6 +14,10 @@ from .permissions import (
     IsUserLeagueStatusManager, IsUserLeagueStatusOwner, UserLeagueStatusFilterPermission
 )
 
+from .filters import (
+    UserLeagueStatusFilter
+)
+
 from rest_framework import viewsets, mixins, permissions, status
 from drf_multiple_serializer import ActionBaseSerializerMixin
 from backend.permissions import (
@@ -106,7 +110,9 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     * Permissions: UserLeagueStatusFilterPermission
         * Umpires must filter by current user. League or no league is optional.
         * Managers can both apply to leagues and manage leagues. Permissions filtered accordingly
-    * Query Params: User, League, Request_status
+    * Query Params: User, League, Request_status, Account_Type
+    * Extra Notes:
+        * Account_type is filtered using the user__account_type lookup expression
 
     apply_level: Apply a Level to UserLeagueStatus \n
     * Permissions: Owner of Applied Level
@@ -114,7 +120,7 @@ class UserLeagueStatusViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         * Ignore below. The only required post field is "level", the pk of the level object
     """
     queryset = UserLeagueStatus.objects.all()
-    filter_fields = ('user', 'league', 'request_status')
+    filterset_class = UserLeagueStatusFilter
 
     serializer_classes = {
         'default': UserLeagueStatusRetrieveSerializer,

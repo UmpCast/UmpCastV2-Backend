@@ -56,10 +56,10 @@ class IsUmpireOwner(permissions.BasePermission):
         return request.user == User.objects.get(pk=user_pk)
 
 
-class IsLeagueOwner(permissions.BasePermission):
+class InLeague(permissions.BasePermission):
     """
-    Checks to see if a given user is a manager and has access rights to a given league
+    Checks to see if a given user has access rights to a given league
     """
     def has_permission(self, request, view):
         league = League.objects.get(pk=view.kwargs['pk'])
-        return request.user.is_manager() and league in request.user.leagues.accepted()
+        return league in request.user.leagues.accepted()

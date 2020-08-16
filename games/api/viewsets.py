@@ -36,7 +36,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 
 
-class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
+class ApplicationViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
                             mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Destroy, Move functionality for ordered Application
@@ -60,13 +60,10 @@ class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixin
         * User Filter-Param is required
         * User must be same as request user
 
-    move: Move Application Order \n
-    * Permissions: IsManager (of league application is assigned to)
-    * Extra Validations:
-        * If order is out of range, will return validation error
+    cast: Cast Application to top of Order \n
+    * Permissions: IsManager & IsApplicationLeague
     * Extra Notes:
-        * pk of application to be moved passed in url
-        * order of desired location (only parameter) passed in json body, all other applications will automatically reorder
+        * Patch Request
     """
     queryset = Application.objects.all()
     serializer_classes = {
@@ -77,14 +74,16 @@ class ApplicationViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixin
     action_permissions = {
         permissions.IsAuthenticated: ["create"],  # create validation logic enforced on serializer
         IsApplicationLeague: ["destroy"],  # additional validation in destroy method
-        IsManager & IsApplicationLeague: ["move"],
+        IsManager & IsApplicationLeague: ["cast"],
         ApplicationFilterPermission: ["list"]
     }
     filter_fields = ('user',)
 
-    # move orders
-    move_filter_variable = 'post'
-    move_filter_value = 'post'
+    @action(detail=True, methods=['patch'])
+    def cast(self, request, pk):  # replace move order. Can only move application to top
+        application = self.get_object()
+        application.top()
+        return Response(status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
