@@ -1,15 +1,18 @@
-from teamsnap.teamsnap import TeamSnapBuilder
 from rest_framework import permissions, views
 from rest_framework.response import Response
-from leagues.models import League
-from .serializers import TeamSnapNoteSerializer
-from teamsnap.models import TeamSnapNote
+
 from backend.permissions import IsManager, IsSuperUser
+from leagues.models import League
+from teamsnap.models import TeamSnapNote, TeamSnapNoteItem
+from teamsnap.teamsnap import TeamSnapBuilder
+
 from .permissions import InLeague
+from .serializers import TeamSnapNoteSerializer
 
 
 class TeamSnapBuildView(views.APIView):
-    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & IsManager & InLeague), )
+    permission_classes = (IsSuperUser | (
+        permissions.IsAuthenticated & IsManager & InLeague), )
 
     def get_api_key(self, request, pk):
         api_key = request.query_params.get('api_key', None)
@@ -17,7 +20,6 @@ class TeamSnapBuildView(views.APIView):
         if api_key is None:
             api_key = league.api_key
         return api_key
-
 
     def get(self, request, pk, format=None):
         api_key = self.get_api_key(request, pk)
@@ -28,7 +30,6 @@ class TeamSnapBuildView(views.APIView):
             return Response(ts.build_tree())
         except:
             return Response({"error": "there was an unexpected error"})
-        
 
     def post(self, request, pk, format=None):
         api_key = self.get_api_key(request, pk)
@@ -43,8 +44,13 @@ class TeamSnapBuildView(views.APIView):
         except:
             return Response({"error": "there was an unexpected error"})
         tsn = TeamSnapNote.objects.create(
-            notes = ts.exception_notes[:64],  # only the first 64 notes will be recorded
-            league = League.objects.get(pk=pk)
+            league=League.objects.get(pk=pk),
+            note_type='build'
         )
+        for exception_note in ts.exception_notes:
+            TeamSnapNoteItem.objects.create(
+                teamsnap_note=tsn,
+                note=exception_note[:128]  # limit length
+            )
         serializer = TeamSnapNoteSerializer(tsn)
         return Response(serializer.data)
