@@ -6,6 +6,13 @@ class TeamSnapNote(models.Model):
     league = models.ForeignKey('leagues.League', on_delete=models.CASCADE)
     date_time = models.DateTimeField(default=now)
 
+    NOTE_CHOICES = (
+        ('sync', 'sync'),
+        ('build', 'build')
+    )
+
+    note_type = models.CharField(max_length=5, choices=NOTE_CHOICES)
+
     class Meta:
         ordering = ['-date_time']
 

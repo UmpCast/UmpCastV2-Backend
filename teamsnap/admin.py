@@ -4,9 +4,9 @@ from .models import TeamSnapNote, TeamSnapNoteItem
 
 
 class TeamSnapNoteAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'league', 'date_time')
+    list_display = ('pk', 'league', 'date_time', 'note_type')
     list_display_links = ('pk',)
-    search_fields = ('pk', 'league')
+    search_fields = ('pk', 'league', 'note_type')
     list_per_page = 25
 
 
