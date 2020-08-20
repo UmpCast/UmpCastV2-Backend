@@ -30,6 +30,15 @@ class JMESPathQueryBuilder(object):
 class TeamSnapBaseMixin(object):
     entry_url = 'https://api.teamsnap.com/v3/me'
 
+    def valid_key(self):
+        assert hasattr(self, "header"), (
+            "'%s' must define the header attribute when inheriting from TeamSnapBaseMixin, "
+            % self.__class__.__name__
+        )
+        user_json = json.loads(requests.get(
+            self.entry_url, headers=self.header).text)
+        return not 'error' in user_json['collection']
+
     def get_tree_url(self):
         """
         Starting from the entry_url, returns the url which displays the division tree
