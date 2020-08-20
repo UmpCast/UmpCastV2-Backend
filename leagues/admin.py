@@ -4,7 +4,8 @@ from ordered_model.admin import OrderedModelAdmin
 
 
 class LeagueAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title', 'adv_scheduling_limit', 'expiration_date', 'public_access', 'ts_id', 'date_joined')
+    list_display = ('pk', 'title', 'adv_scheduling_limit',
+                    'expiration_date', 'public_access', 'date_joined', 'api_key')
     list_display_links = ('pk', 'title')
     search_fields = ('title', )
     list_per_page = 25

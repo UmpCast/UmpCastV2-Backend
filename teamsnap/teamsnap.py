@@ -30,6 +30,15 @@ class JMESPathQueryBuilder(object):
 class TeamSnapBaseMixin(object):
     entry_url = 'https://api.teamsnap.com/v3/me'
 
+    def valid_key(self):
+        assert hasattr(self, "header"), (
+            "'%s' must define the header attribute when inheriting from TeamSnapBaseMixin, "
+            % self.__class__.__name__
+        )
+        user_json = json.loads(requests.get(
+            self.entry_url, headers=self.header).text)
+        return not 'error' in user_json['collection']
+
     def get_tree_url(self):
         """
         Starting from the entry_url, returns the url which displays the division tree
@@ -112,19 +121,31 @@ class TeamSnapBuilder(TeamSnapBaseMixin):
         Clears out all the divisions within the current league and attatch
         new divisions as specified by divisions
         """
-        self.league.division_set.all().delete()  # clear out divisions
+        for division in self.league.division_set.all():  # clear out divisions
+            self.exception_notes.append(
+                f"{division.title} and all related games removed from UmpCast"
+            )
+            division.delete()
         mappings = self.get_id_value_mappings(
             self.get_tree_components(), 'name')
         for division in divisions:
             if division in mappings:  # check if division is even valid
-                Division.objects.create(
-                    title=mappings[division],
-                    league=self.league,
-                    ts_id=division
-                )
+                try:
+                    d = Division.objects.create(
+                        title=mappings[division][:32],
+                        league=self.league,
+                        ts_id=division
+                    )
+                    self.exception_notes.append(
+                        f"{d.title} was succesfully created by UmpCast"
+                    )
+                except:
+                    self.exception_notes.append(
+                        f"An unexpected error occured while creating {division}. Division not created"
+                    )
             else:
                 self.exception_notes.append(
-                    f"Division with ts_id {division} was not created since it does not exist"
+                    f"UmpCast could not find {division}"
                 )
 
 

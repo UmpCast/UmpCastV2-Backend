@@ -31,7 +31,8 @@ class LeagueRelatedModelManager(models.Manager):
 class League(models.Model):
     title = models.CharField(max_length=32)
     description = models.TextField(max_length=1028, null=True, blank=True)
-    league_picture = models.ImageField(upload_to='league_pics/%Y/%m/', null=True, blank=True)
+    league_picture = models.ImageField(
+        upload_to='league_pics/%Y/%m/', null=True, blank=True)
     date_joined = models.DateTimeField(default=now)
     expiration_date = models.DateTimeField(default=set_league_expiration_date)
     public_access = models.BooleanField(default=False)
@@ -39,8 +40,10 @@ class League(models.Model):
     email = models.EmailField(max_length=64, blank=True,  null=True)
     website_url = models.CharField(max_length=64, blank=True, null=True)
 
-    adv_scheduling_limit = models.IntegerField(default=30)  # how many days in advance games are scheduled
-    cancellation_period = models.IntegerField(default=2)  # how many days in advance games can be canneled
+    # how many days in advance games are scheduled
+    adv_scheduling_limit = models.IntegerField(default=30)
+    # how many days in advance games can be canneled
+    cancellation_period = models.IntegerField(default=2)
 
     # defaults
     default_max_casts = models.IntegerField(default=0)
@@ -50,9 +53,7 @@ class League(models.Model):
     objects = LeagueRelatedModelManager()
 
     # team snap fields
-    ts_id = models.IntegerField(default=0)
     api_key = models.CharField(default="", max_length=128)
-    opponent_library = JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['-pk']
