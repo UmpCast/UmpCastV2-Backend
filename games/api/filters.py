@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from ..models import Game
+from ..models import Game, Application
 
 
 class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
@@ -15,3 +15,12 @@ class GameFilter(filters.FilterSet):
     class Meta:
         model = Game
         fields = ['division', 'date_time']
+
+
+class ApplicationFilter(filters.FilterSet):
+    date_time = filters.IsoDateTimeFromToRangeFilter(
+        field_name='post__game__date_time')
+
+    class Meta:
+        model = Application
+        fields = ['user', 'date_time']

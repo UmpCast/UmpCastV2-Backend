@@ -30,14 +30,14 @@ from backend.mixins import (
 from rest_framework import viewsets, permissions, mixins, status
 from ..models import Application, Post, Game
 from rest_framework.decorators import action
-from .filters import GameFilter
+from .filters import GameFilter, ApplicationFilter
 from drf_multiple_serializer import ActionBaseSerializerMixin
 from django.utils import timezone
 from rest_framework.response import Response
 
 
 class ApplicationViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
-                            mixins.ListModelMixin, viewsets.GenericViewSet):
+                         mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Destroy, Move functionality for ordered Application
 
@@ -70,14 +70,17 @@ class ApplicationViewSet(ActionBaseSerializerMixin, mixins.CreateModelMixin, mix
         'default': ApplicationRetrieveSerializer,
         'create': ApplicationCreateSerializer
     }
-    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
+    permission_classes = (IsSuperUser | (
+        permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
-        permissions.IsAuthenticated: ["create"],  # create validation logic enforced on serializer
-        IsApplicationLeague: ["destroy"],  # additional validation in destroy method
+        # create validation logic enforced on serializer
+        permissions.IsAuthenticated: ["create"],
+        # additional validation in destroy method
+        IsApplicationLeague: ["destroy"],
         IsManager & IsApplicationLeague: ["cast"],
         ApplicationFilterPermission: ["list"]
     }
-    filter_fields = ('user',)
+    filterset_class = ApplicationFilter
 
     @action(detail=True, methods=['patch'])
     def cast(self, request, pk):  # replace move order. Can only move application to top
@@ -107,15 +110,17 @@ class PostViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.Ge
     """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
+    permission_classes = (IsSuperUser | (
+        permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
-        IsManager: ["create"],  # manager of league requirement enforced on serializer level
+        # manager of league requirement enforced on serializer level
+        IsManager: ["create"],
         IsManager & IsPostLeague: ["destroy"]
     }
 
 
 class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                    mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+                  mixins.DestroyModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Provide Create, Retrieve, Destroy, List, List-Filter functionality for Game Model
 
@@ -140,9 +145,11 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
         * Date_time_after (iso format)
     """
     serializer_class = GameSerializer
-    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & ActionBasedPermission),)
+    permission_classes = (IsSuperUser | (
+        permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
-        IsManager: ["create"],  # manager of league requirement enforced on serializer level
+        # manager of league requirement enforced on serializer level
+        IsManager: ["create"],
         IsGameLeague: ["retrieve"],
         IsManager & IsGameLeague: ["destroy"],
         GameFilterPermissions: ["list"],
