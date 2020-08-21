@@ -54,6 +54,7 @@ class League(models.Model):
 
     # team snap fields
     api_key = models.CharField(default="", max_length=128)
+    is_synced = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-pk']
