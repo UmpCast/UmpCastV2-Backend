@@ -1,19 +1,17 @@
-from ..models import (
-    UmpCastNotification, LeagueNotification, GameNotification, ApplicationNotification
-)
-from backend.permissions import (
-    IsSuperUser
-)
-from rest_framework import permissions
+from django.db.models import CharField, F, Value
+from rest_framework import permissions, serializers
 from rest_framework.generics import ListAPIView
-from django.db.models import Value, CharField, F
-from rest_framework import serializers
+
+from backend.permissions import IsSuperUser
 from games.models import Application
 from users.models import User
 
+from ..models import (ApplicationNotification, GameNotification,
+                      LeagueNotification, UmpCastNotification)
+
 
 class NotificationObjectSerializer(serializers.Serializer):
-    pk = serializers.CharField()
+    pk = serializers.IntegerField()
     subject = serializers.CharField()
     message = serializers.CharField()
     scope = serializers.CharField()
@@ -28,31 +26,33 @@ class IsUserOwner(permissions.BasePermission):
 
 class NotificationListView(ListAPIView):
     serializer_class = NotificationObjectSerializer
-    permission_classes = (IsSuperUser | (permissions.IsAuthenticated & IsUserOwner), )
+    permission_classes = (IsSuperUser | (
+        permissions.IsAuthenticated & IsUserOwner), )
     value_fields = ('pk', 'subject', 'message', 'notification_date_time')
 
     def get_umpcast_qs(self):
         return UmpCastNotification.objects.all().values(
-            *self.value_fields, scope = Value('ump-cast', output_field=CharField()), related_pk=F('pk')
+            *self.value_fields, scope=Value('ump-cast', output_field=CharField()), related_pk=F('pk')
         )
 
     def get_league_qs(self):
         pk = self.kwargs.get('pk')
         return LeagueNotification.objects.filter(league__user__pk=pk).values(
-            *self.value_fields, scope = Value('league', output_field=CharField()), related_pk=F('league__pk')
+            *self.value_fields, scope=Value('league', output_field=CharField()), related_pk=F('league__pk')
         )
 
     def get_game_qs(self):
         pk = self.kwargs.get('pk')
-        game_ids = Application.objects.filter(user__pk=pk).values_list('post__game__pk', flat=True)
+        game_ids = Application.objects.filter(
+            user__pk=pk).values_list('post__game__pk', flat=True)
         return GameNotification.objects.filter(game__pk__in=game_ids).values(
-            *self.value_fields, scope = Value('game', output_field=CharField()), related_pk=F('game__pk')
+            *self.value_fields, scope=Value('game', output_field=CharField()), related_pk=F('game__pk')
         )
 
     def get_application_qs(self):
         pk = self.kwargs.get('pk')
         return ApplicationNotification.objects.filter(application__user__pk=pk).values(
-            *self.value_fields, scope = Value('application', output_field=CharField()), related_pk=F('application__pk')
+            *self.value_fields, scope=Value('application', output_field=CharField()), related_pk=F('application__pk')
         )
 
     def get_queryset(self):
