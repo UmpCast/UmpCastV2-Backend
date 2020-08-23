@@ -3,6 +3,7 @@ import re
 import django.contrib.auth.password_validation as validators
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from leagues.api.serializers.league import LeaguePublicSerializer
 
 from users.models import User
 
@@ -17,7 +18,8 @@ class UserProfilePrivateBaseSerializer(serializers.ModelSerializer):
         model = User
         fields = ('pk', 'account_type', 'email', 'email_notifications',
                   'first_name', 'last_name', 'phone_number', 'phone_notifications', 'profile_picture',
-                  'date_joined', 'password', 'password2', 'accepted_leagues', 'pending_leagues', 'rejected_leagues')
+                  'date_joined', 'password', 'password2', 'accepted_leagues', 'pending_leagues', 'rejected_leagues',
+                  'league_notifications', 'game_notifications', 'application_notifications')
         read_only_fields = ('pk', 'accepted_leagues',
                             'pending_leagues', 'rejected_leagues')
         extra_kwargs = {
@@ -43,13 +45,16 @@ class UserProfilePrivateBaseSerializer(serializers.ModelSerializer):
         return phone_number
 
     def get_accepted_leagues(self, instance):
-        return instance.leagues.accepted().values_list('pk', flat=True)
+        accepted_leagues = instance.leagues.accepted()
+        return LeaguePublicSerializer(accepted_leagues, many=True).data
 
     def get_pending_leagues(self, instance):
-        return instance.leagues.pending().values_list('pk', flat=True)
+        pending_leagues = instance.leagues.pending()
+        return LeaguePublicSerializer(pending_leagues, many=True).data
 
     def get_rejected_leagues(self, instance):
-        return instance.leagues.rejected().values_list('pk', flat=True)
+        rejected_leagues = instance.leagues.rejected()
+        return LeaguePublicSerializer(rejected_leagues, many=True).data
 
 
 class UserProfilePublicSerializer(serializers.ModelSerializer):
