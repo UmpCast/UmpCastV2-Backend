@@ -3,6 +3,7 @@ from ..models import (
 )
 
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 
 
 class UmpCastNotificationSerializer(serializers.ModelSerializer):
@@ -17,8 +18,16 @@ class LeagueNotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LeagueNotification
-        fields = ('pk', 'notification_date_time', 'subject', 'message', 'league')
+        fields = ('pk', 'notification_date_time',
+                  'subject', 'message', 'league')
         read_only_fields = ('pk', 'notification_date_time')
+
+    def validate_league(self, league):
+        if league in self.context['request'].user.leagues.accepted():
+            return league
+        else:
+            raise ValidationError(
+                "Can only create LeagueNotification for a league you own")
 
 
 class GameNotificationSerializer(serializers.ModelSerializer):
@@ -33,5 +42,6 @@ class ApplicationNotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApplicationNotification
-        fields = ('pk', 'notification_date_time', 'subject', 'message', 'application')
+        fields = ('pk', 'notification_date_time',
+                  'subject', 'message', 'application')
         read_only_fields = ('pk', 'notification_date_time')

@@ -38,7 +38,8 @@ class LeagueNotificationViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMix
     permission_classes = (IsSuperUser | (
         permissions.IsAuthenticated & ActionBasedPermission),)
     action_permissions = {
-        IsManager & InLeague: ['create', 'update', 'destroy'],
+        IsManager & InLeague: ['update', 'destroy'],
+        IsManager: ['create'],  # handle league validation on serializer
         InLeague: ['retrieve'],
         InFilterLeague | FilterUserOwner: ['list']
     }
