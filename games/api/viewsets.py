@@ -11,7 +11,8 @@ from .serializers.post import (
 )
 
 from .permissions import (
-    IsApplicationLeague, IsPostLeague, IsGameLeague, GameFilterPermissions, ApplicationFilterPermission
+    IsApplicationLeague, IsPostLeague, IsGameLeague, ApplicationFilterPermission,
+    GameFilterDivision, GameFilterDivisionIn, GameFilterUser
 )
 
 from backend.permissions import (
@@ -152,7 +153,7 @@ class GameViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
         IsManager: ["create"],
         IsGameLeague: ["retrieve"],
         IsManager & IsGameLeague: ["destroy"],
-        GameFilterPermissions: ["list"],
+        GameFilterDivision | GameFilterDivisionIn | GameFilterUser: ["list"],
     }
 
     queryset = Game.objects.all()
