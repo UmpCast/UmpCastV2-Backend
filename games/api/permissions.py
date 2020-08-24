@@ -33,6 +33,9 @@ class IsPostLeague(permissions.BasePermission):
     def has_permission(self, request, view):
         return Post.objects.get(pk=view.kwargs['pk']).game.division.league in request.user.leagues.accepted()
 
+# class IsUserFilter(permissions.BasePermission):
+    # def has_permission(self, request, view):
+
 
 class IsGameLeague(permissions.BasePermission):
     """
@@ -49,7 +52,7 @@ class GameFilterDivision(permissions.BasePermission):
         division_visibilities = request.user.leagues.values_list(
             'userleaguestatus__visibilities__division', flat=True)
         if division_pk:
-            return division_pk in division_visibilities
+            return int(division_pk) in division_visibilities
         return False
 
 
@@ -68,7 +71,7 @@ class GameFilterDivisionIn(permissions.BasePermission):
             'userleaguestatus__visibilities__division', flat=True)
         if division__in:
             for division in division__in.split(','):
-                if division not in division_visibilities:
+                if int(division) not in division_visibilities:
                     return False
             return True
         return False
@@ -79,7 +82,7 @@ class GameFilterDivisionInManager(permissions.BasePermission):
         division__in = request.query_params.get('division__in', None)
         if division__in:
             for division in division__in.split(','):
-                if Division.objects.get(pk=division).league not in request.user.leagues.accepted():
+                if Division.objects.get(pk=int(division)).league not in request.user.leagues.accepted():
                     return False
             return True
         return False
