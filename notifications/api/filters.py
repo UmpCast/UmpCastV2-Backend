@@ -19,7 +19,7 @@ class LeagueNotificationFilter(filters.FilterSet):
 
     class Meta:
         model = LeagueNotification
-        fields = ['date_time']
+        fields = ['date_time', 'league']
 
 
 class GameNotificationFilter(filters.FilterSet):
