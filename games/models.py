@@ -17,7 +17,7 @@ class Game(models.Model):
     ts_id = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['-date_time']
+        ordering = ['date_time']
 
     def sync(self, **kwargs):
         # expected fields: division, title, date_time, location, is_active
