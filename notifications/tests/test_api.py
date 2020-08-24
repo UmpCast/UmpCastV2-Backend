@@ -41,6 +41,8 @@ class TestLeagueNotificationAPI(mixins.TestModelMixin, APITestCase):
 
     def get_valid_create(self):
         league = baker.make('leagues.League')
+        self.user.leagues.add(league, through_defaults={
+                              'request_status': 'accepted'})
         return {
             'subject': 'Message Subject',
             'message': 'Message Body',
