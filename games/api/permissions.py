@@ -53,6 +53,14 @@ class GameFilterDivision(permissions.BasePermission):
         return False
 
 
+class GameFilterDivisionManager(permissions.BasePermission):
+    def has_permission(self, request, view):
+        division_pk = request.query_params.get('division', None)
+        if division_pk:
+            return Division.objects.get(pk=division_pk).league in request.user.leagues.accepted()
+        return False
+
+
 class GameFilterDivisionIn(permissions.BasePermission):
     def has_permission(self, request, view):
         division__in = request.query_params.get('division__in', None)
@@ -61,6 +69,17 @@ class GameFilterDivisionIn(permissions.BasePermission):
         if division__in:
             for division in division__in.split(','):
                 if division not in division_visibilities:
+                    return False
+            return True
+        return False
+
+
+class GameFilterDivisionInManager(permissions.BasePermission):
+    def has_permission(self, request, view):
+        division__in = request.query_params.get('division__in', None)
+        if division__in:
+            for division in division__in.split(','):
+                if Division.objects.get(pk=division).league not in request.user.leagues.accepted():
                     return False
             return True
         return False
