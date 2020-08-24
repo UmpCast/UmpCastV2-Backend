@@ -3,7 +3,11 @@ from rest_framework import permissions, serializers
 from rest_framework.generics import ListAPIView
 
 from backend.permissions import IsSuperUser
-from games.models import Application
+from games.api.serializers.application import ApplicationBaseSerializer
+from games.api.serializers.game import GameSerializer
+from games.models import Application, Game
+from leagues.api.serializers.league import LeaguePublicSerializer
+from leagues.models import League
 from users.models import User
 
 from ..models import (ApplicationNotification, GameNotification,
@@ -17,6 +21,20 @@ class NotificationObjectSerializer(serializers.Serializer):
     scope = serializers.CharField()
     notification_date_time = serializers.DateTimeField()
     related_pk = serializers.IntegerField()
+    related_object = serializers.SerializerMethodField()
+
+    def get_related_object(self, obj):
+        scope = obj.get('scope')
+        related_pk = obj.get('related_pk')
+        if scope == 'ump-cast':
+            return {}
+        if scope == 'league':
+            return LeaguePublicSerializer(League.objects.get(pk=related_pk)).data
+        if scope == 'game':
+            return GameSerializer(Game.objects.get(pk=related_pk)).data
+        if scope == 'application':
+            return ApplicationBaseSerializer(Application.objects.get(pk=related_pk)).data
+        return {}
 
 
 class IsUserOwner(permissions.BasePermission):
