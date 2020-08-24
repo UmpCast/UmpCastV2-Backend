@@ -3,7 +3,7 @@ from rest_framework import permissions, serializers
 from rest_framework.generics import ListAPIView
 
 from backend.permissions import IsSuperUser
-from games.api.serializers.application import ApplicationBaseSerializer
+from games.api.serializers.application import ApplicationPublicSerializer
 from games.api.serializers.game import GameSerializer
 from games.models import Application, Game
 from leagues.api.serializers.league import LeaguePublicSerializer
@@ -33,7 +33,7 @@ class NotificationObjectSerializer(serializers.Serializer):
         if scope == 'game':
             return GameSerializer(Game.objects.get(pk=related_pk)).data
         if scope == 'application':
-            return ApplicationBaseSerializer(Application.objects.get(pk=related_pk)).data
+            return ApplicationPublicSerializer(Application.objects.get(pk=related_pk)).data
         return {}
 
 
