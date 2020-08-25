@@ -73,3 +73,16 @@ class TeamSnapSyncView(views.APIView):
             )
         serializer = TeamSnapNoteSerializer(tsn)
         return Response(serializer.data)
+
+
+class TeamSnapTestKeyView(views.APIView):
+    permission_classes = (IsSuperUser | (
+        permissions.IsAuthenticated & IsManager & InLeague), )
+
+    def get(self, request, pk, format=None):
+        api_key = request.query_params.get('api_key', '')
+        ts = TeamSnapSyncer(api_key, League.objects.get(pk=pk))
+        if not ts.valid_key():
+            return Response({"status": "invalid"})
+        else:
+            return Response({"status": "valid"})
