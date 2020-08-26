@@ -53,7 +53,8 @@ class League(models.Model):
     objects = LeagueRelatedModelManager()
 
     # team snap fields
-    api_key = models.CharField(default="", max_length=128)
+    api_key = models.CharField(
+        default="", max_length=128, blank=True, null=True)
     is_synced = models.BooleanField(default=False)
 
     class Meta:
