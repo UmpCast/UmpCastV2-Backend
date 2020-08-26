@@ -112,9 +112,10 @@ class TeamSnapBuilder(TeamSnapBaseMixin):
             else:
                 adjacency_dict[parent_id] = [curr_id]
 
-        adjacency_dict['mappings'] = self.get_id_value_mappings(
-            tree_components, 'name')
-        return adjacency_dict
+        return {
+            'tree': adjacency_dict,
+            'mappings': self.get_id_value_mappings(tree_components, 'name')
+        }
 
     def create_league(self, divisions):
         """
