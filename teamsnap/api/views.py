@@ -75,14 +75,17 @@ class TeamSnapSyncView(views.APIView):
         return Response(serializer.data)
 
 
-class TeamSnapTestKeyView(views.APIView):
+class TeamSnapSaveKeyView(views.APIView):
     permission_classes = (IsSuperUser | (
         permissions.IsAuthenticated & IsManager & InLeague), )
 
     def get(self, request, pk, format=None):
         api_key = request.query_params.get('api_key', '')
         ts = TeamSnapSyncer(api_key, League.objects.get(pk=pk))
+        league = League.objects.get(pk=pk)
         if not ts.valid_key():
             return Response({"status": "invalid"})
         else:
+            league.api_key = api_key
+            league.save()
             return Response({"status": "valid"})
