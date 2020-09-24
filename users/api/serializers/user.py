@@ -3,7 +3,7 @@ import re
 import django.contrib.auth.password_validation as validators
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
-from leagues.api.serializers.league import LeaguePublicSerializer
+from leagues.api.serializers.league import LeaguePublicSerializer, LeaguePrivateSerializer
 
 from users.models import User
 
@@ -46,7 +46,7 @@ class UserProfilePrivateBaseSerializer(serializers.ModelSerializer):
 
     def get_accepted_leagues(self, instance):
         accepted_leagues = instance.leagues.accepted()
-        return LeaguePublicSerializer(accepted_leagues, many=True).data
+        return LeaguePrivateSerializer(accepted_leagues, many=True).data
 
     def get_pending_leagues(self, instance):
         pending_leagues = instance.leagues.pending()
