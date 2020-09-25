@@ -15,6 +15,15 @@ class BaseNotification(models.Model):
     subject = models.CharField(max_length=64, null=True, blank=True)
     message = models.CharField(max_length=256)
 
+    def save(self, *args, **kwargs):
+        if self.subject:
+            self.subject = self.subject[:64]
+        self.message = self.message[:256]
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-notification_date_time']
+
 
 class UmpCastNotification(BaseNotification):
     """
@@ -145,14 +154,16 @@ post_save.connect(application_notification_receiver, sender=Application)
 
 
 def print_game_notification(sender, instance, *args, **kwargs):
-    print(instance)
+    pass
+    # print(instance)
 
 
 post_save.connect(print_game_notification, sender=GameNotification)
 
 
 def print_application_notification(sender, instance, *args, **kwargs):
-    print(instance)
+    pass
+    # print(instance)
 
 
 post_save.connect(print_application_notification,

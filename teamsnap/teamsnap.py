@@ -101,20 +101,22 @@ class TeamSnapBuilder(TeamSnapBaseMixin):
         """
         tree_components = self.get_tree_components()
         adjacency_dict = {}
+        response = {}
 
         for component in tree_components:
             parent_id = component['parent_id']
-            curr_id = component['id']
+            curr_id = str(component['id'])
             if parent_id is None:
-                adjacency_dict['root'] = curr_id
+                response['root'] = curr_id
             elif parent_id in adjacency_dict:
                 adjacency_dict[parent_id].append(curr_id)
             else:
                 adjacency_dict[parent_id] = [curr_id]
 
-        adjacency_dict['mappings'] = self.get_id_value_mappings(
+        response['tree'] = adjacency_dict
+        response['mappings'] = self.get_id_value_mappings(
             tree_components, 'name')
-        return adjacency_dict
+        return response
 
     def create_league(self, divisions):
         """

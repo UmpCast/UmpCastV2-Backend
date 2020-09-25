@@ -8,7 +8,8 @@ class UserModelManager(BaseUserManager):
     """Required Object Manager for UserAccount"""
 
     def create_user(self, email, first_name, last_name, password=None):
-        user = self.model(email=email, first_name=first_name, last_name=last_name)
+        user = self.model(email=email, first_name=first_name,
+                          last_name=last_name)
         if password is not None:
             user.set_password(password)
         user.save()
@@ -24,17 +25,26 @@ class UserModelManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User Model"""
-    leagues = models.ManyToManyField(League, blank=True, through='UserLeagueStatus')
+    leagues = models.ManyToManyField(
+        League, blank=True, through='UserLeagueStatus')
     email = models.EmailField(max_length=64, unique=True)
-    email_notifications = models.BooleanField(default=True)
+
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=32)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=10, blank=True)
-    phone_notifications = models.BooleanField(default=True)
-    profile_picture = models.ImageField(upload_to='profile_pics/%Y/%m/', null=True, blank=True)
+
+    profile_picture = models.ImageField(
+        upload_to='profile_pics/%Y/%m/', null=True, blank=True)
     date_joined = models.DateTimeField(default=now)
+
+    # notification settings
+    phone_notifications = models.BooleanField(default=True)
+    email_notifications = models.BooleanField(default=True)
+    league_notifications = models.BooleanField(default=True)
+    game_notifications = models.BooleanField(default=True)
+    application_notifications = models.BooleanField(default=True)
 
     ACCOUNT_TYPE_CHOICES = (
         ('umpire', 'umpire'),
@@ -42,7 +52,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('inactive', 'inactive'),
     )
 
-    account_type = models.CharField(max_length=10, choices=ACCOUNT_TYPE_CHOICES, default='inactive')
+    account_type = models.CharField(
+        max_length=10, choices=ACCOUNT_TYPE_CHOICES, default='inactive')
 
     objects = UserModelManager()
     USERNAME_FIELD = 'email'
@@ -80,7 +91,8 @@ class UserLeagueStatus(models.Model):
         ('rejected', 'rejected'),
     )
 
-    request_status = models.CharField(max_length=10, choices=REQUEST_STATUS_CHOICES, default='pending')
+    request_status = models.CharField(
+        max_length=10, choices=REQUEST_STATUS_CHOICES, default='pending')
 
     # Umpire Relevant Fields
     max_casts = models.IntegerField(default=0)

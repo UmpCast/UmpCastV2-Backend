@@ -14,8 +14,11 @@ class TeamSnapBuildView(views.APIView):
     permission_classes = (IsSuperUser | (
         permissions.IsAuthenticated & IsManager & InLeague), )
 
+    def get_api_key(self, pk):
+        return League.objects.get(pk=pk).api_key
+
     def get(self, request, pk, format=None):
-        api_key = request.query_params.get('api_key', '')
+        api_key = self.get_api_key(pk)
         ts = TeamSnapBuilder(api_key, League.objects.get(pk=pk))
         if not ts.valid_key():
             return Response({"error": "invalid api key"})
@@ -25,7 +28,7 @@ class TeamSnapBuildView(views.APIView):
             return Response({"error": "there was an unexpected error"})
 
     def post(self, request, pk, format=None):
-        api_key = request.query_params.get('api_key', '')
+        api_key = self.get_api_key(pk)
         ts = TeamSnapBuilder(api_key, League.objects.get(pk=pk))
         if not ts.valid_key():
             return Response({"error": "invalid api key"})
@@ -51,10 +54,13 @@ class TeamSnapBuildView(views.APIView):
 
 class TeamSnapSyncView(views.APIView):
     permission_classes = (IsSuperUser | (
-        permissions.IsAuthenticated & IsManager & InLeague), )
+        permissions.IsAuthenticated & IsManager & InLeague),)
+
+    def get_api_key(self, pk):
+        return League.objects.get(pk=pk).api_key
 
     def get(self, request, pk, format=None):
-        api_key = request.query_params.get('api_key', '')
+        api_key = self.get_api_key(pk)
         ts = TeamSnapSyncer(api_key, League.objects.get(pk=pk))
         if not ts.valid_key():
             return Response({"error": "invalid api key"})
@@ -73,3 +79,19 @@ class TeamSnapSyncView(views.APIView):
             )
         serializer = TeamSnapNoteSerializer(tsn)
         return Response(serializer.data)
+
+
+class TeamSnapSaveKeyView(views.APIView):
+    permission_classes = (IsSuperUser | (
+        permissions.IsAuthenticated & IsManager & InLeague), )
+
+    def get(self, request, pk, format=None):
+        api_key = request.query_params.get('api_key', '')
+        ts = TeamSnapSyncer(api_key, League.objects.get(pk=pk))
+        league = League.objects.get(pk=pk)
+        if not ts.valid_key():
+            return Response({"status": "invalid"})
+        else:
+            league.api_key = api_key
+            league.save()
+            return Response({"status": "valid"})

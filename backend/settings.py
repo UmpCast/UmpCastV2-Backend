@@ -33,7 +33,8 @@ ALLOWED_HOSTS = [
 
 CORS_ORIGIN_WHITELIST = [
     "https://localhost:8000",
-    "https://localhost:9000"
+    "https://localhost:9000",
+    "https://umpcast-test.web.app/"
 ]
 # Application definition
 
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'ordered_model',
     'sslserver',
+    # 'django_celery_results',
 
     # amazon aws s3
     'storages',
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
     'leagues',
     'games',
     'notifications',
+    # 'notifications.apps.NotificationsConfig',
     'teamsnap'
 ]
 
@@ -264,5 +267,19 @@ SOCIAL_AUTH_PIPELINE = (
     # Update the user record with any changed info from the auth service.
     'social_core.pipeline.user.user_details',
 )
+
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'django-db'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 
 django_heroku.settings(locals())
