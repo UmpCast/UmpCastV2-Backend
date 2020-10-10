@@ -34,7 +34,7 @@ ALLOWED_HOSTS = [
 CORS_ORIGIN_WHITELIST = [
     "https://localhost:8000",
     "https://localhost:9000",
-    "https://umpcast-test.web.app/"
+    "https://umpcast-test.web.app"
 ]
 # Application definition
 
