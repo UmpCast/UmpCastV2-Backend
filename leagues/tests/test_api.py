@@ -101,7 +101,8 @@ class TestLevelAPI(mixins.TestCreateMixin, mixins.TestUpdateMixin, mixins.TestDe
                               'request_status': 'accepted'})
         return {
             'league': role.division.league.pk,
-            'visibilities': [role.pk]
+            'visibilities': [role.pk],
+            'title': "test title"
         }
 
     def get_filter_queries(self):
