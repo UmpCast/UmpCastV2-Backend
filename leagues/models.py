@@ -86,7 +86,7 @@ class Role(OrderedModel):
 
 
 class Level(OrderedModel):
-    title = models.CharField(max_length=32, null=True, blank=True)
+    title = models.CharField(max_length=32, null=True, blank=False)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     visibilities = models.ManyToManyField(Role, blank=True)
     order_with_respect_to = 'league'
