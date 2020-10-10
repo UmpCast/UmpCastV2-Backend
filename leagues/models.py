@@ -3,6 +3,7 @@ from django.utils.timezone import now
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
 from ordered_model.models import OrderedModel
+from django.core.validators import MinValueValidator
 
 
 def set_league_expiration_date():
@@ -41,13 +42,17 @@ class League(models.Model):
     website_url = models.CharField(max_length=64, blank=True, null=True)
 
     # how many days in advance games are scheduled
-    adv_scheduling_limit = models.IntegerField(default=30)
+    adv_scheduling_limit = models.IntegerField(
+        default=30, validators=[MinValueValidator(0)])
     # how many days in advance games can be canneled
-    cancellation_period = models.IntegerField(default=2)
+    cancellation_period = models.IntegerField(
+        default=2, validators=[MinValueValidator(0)])
 
     # defaults
-    default_max_casts = models.IntegerField(default=0)
-    default_max_backups = models.IntegerField(default=0)
+    default_max_casts = models.IntegerField(
+        default=0, validators=[MinValueValidator(0)])
+    default_max_backups = models.IntegerField(
+        default=0, validators=[MinValueValidator(0)])
 
     # uls m2m custom manager
     objects = LeagueRelatedModelManager()
