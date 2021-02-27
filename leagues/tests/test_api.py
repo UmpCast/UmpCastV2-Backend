@@ -15,7 +15,7 @@ class TestLeagueAPI(mixins.TestModelMixin, APITestCase):
     """
 
     basename = 'league'
-    filter_fields = ['user']
+    filter_fields = ['user', 'title']
     valid_update = {
         'title': 'new league name',
         'description': 'new leagues require new descriptions!'
@@ -34,13 +34,20 @@ class TestLeagueAPI(mixins.TestModelMixin, APITestCase):
 
     def get_filter_queries(self):
         return {
-            'user': [str(user.pk) for user in User.objects.all()]
+            'user': [str(user.pk) for user in User.objects.all()],
+            'title': [league.title for league in League.objects.all()]
         }
 
     def test_retrieve_public_endpoint(self):
         league = baker.make('leagues.League')
         public_url = reverse('league-public', kwargs={'pk': league.pk})
         response = self.client.get(public_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_public_search_endpoint(self):
+        public_search_url = reverse('league-public-search')
+        search_string = f"{public_search_url}?title=my_league_name"
+        response = self.client.get(search_string)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -94,7 +101,8 @@ class TestLevelAPI(mixins.TestCreateMixin, mixins.TestUpdateMixin, mixins.TestDe
                               'request_status': 'accepted'})
         return {
             'league': role.division.league.pk,
-            'visibilities': [role.pk]
+            'visibilities': [role.pk],
+            'title': "test title"
         }
 
     def get_filter_queries(self):

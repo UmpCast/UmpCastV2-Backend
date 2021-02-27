@@ -31,6 +31,7 @@ from ..models import League, Division, Role, Level
 from django.urls import reverse
 from rest_framework.decorators import action
 from backend.mixins import MoveOrderedModelMixin
+from .filters import LeagueFilter
 
 
 class LevelViewSet(ActionBaseSerializerMixin, MoveOrderedModelMixin, mixins.CreateModelMixin,
@@ -199,9 +200,9 @@ class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
     """
 
     queryset = League.objects.all()
-    filter_fields = ('user', )
+    filterset_class = LeagueFilter
     serializer_classes = {
-        'default': LeaguePrivateSerializer
+        'default': LeaguePrivateSerializer,
     }
     permission_classes = (IsSuperUser | (
         permissions.IsAuthenticated & ActionBasedPermission), )
@@ -210,11 +211,20 @@ class LeagueViewSet(ActionBaseSerializerMixin, viewsets.ModelViewSet):
         IsUmpireOwner: ['list'],
         IsManager & InLeague: ['update', 'partial_update', 'destroy'],
         InLeague: ['retrieve'],
-        permissions.IsAuthenticated: ['public']
+        permissions.IsAuthenticated: ['public', 'public_search']
     }
 
     @action(detail=True, methods=['get'])
     def public(self, request, pk):  # get public league info
         league = self.get_object()
         serializer = LeaguePublicSerializer(league)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def public_search(self, request):
+        query = request.query_params.get('title')
+        league_filter = LeagueFilter()
+        qs = league_filter.title_trigram_search(
+            League.objects.all(), 'title', query)
+        serializer = LeaguePublicSerializer(qs, many=True)
         return Response(serializer.data)

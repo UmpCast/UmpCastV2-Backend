@@ -11,6 +11,12 @@ class RoleBaseSerializer(serializers.ModelSerializer):
         read_only_fields = ('pk', 'order')
         # create_only_fields = ('division',)
 
+    def validate(self, data):
+        if data['division'].role_set.filter(title=data['title']).exists():
+            raise ValidationError('duplicate title for role in division')
+        return super().validate(data)
+
+
 class RoleCreateSerializer(RoleBaseSerializer):
 
     def validate_division(self, division):
